@@ -21,7 +21,7 @@ $cb->setToken($ACCESS_TOKEN, $ACCESS_TOKEN_SECRET);
 
 //retrieve posts
 $q = 'eduwenca'; //$_POST['q'];
-$count = 20; // $_POST['count'];
+$count = 800; // $_POST['count'];
 $api = 'statuses_mentionsTimeline'; //$_POST['api'];
 $api = 'lists_statuses'; //$_POST['api'];
 
@@ -31,7 +31,7 @@ $api = 'lists_statuses'; //$_POST['api'];
 //Make the REST call
 $erreur = array(json_decode(file_get_contents('cache/hashtagerror.txt'), true));
 
-$data = array("all"=> array($cb->lists_statuses('slug=timeline&owner_screen_name=ewlftm')),
+$data = array("all"=> array($cb->lists_statuses('slug=timeline&owner_screen_name=ewlftm&count=800')),
    "error"=> $erreur);
 
 //Output result in JSON, getting it ready for jQuery to process
