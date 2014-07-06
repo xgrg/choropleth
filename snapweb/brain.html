@@ -1,0 +1,69 @@
+<html>
+   <head>
+      <style>
+      </style>
+      <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+      <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+      <script src="hammer.min.js"></script>
+      <script>
+         $(document).ready(function(){
+            $start_img = 0;
+            $current_img = 0;
+            var drags = document.querySelectorAll('#toto');
+            [].forEach.call(drags, function(drag) {
+                 drag.addEventListener('dragstart', handleDragStart, false);
+                 drag.addEventListener('dragend', handleDragEnd, false);
+              });
+              function handleDragStart(e){
+                     console.log('handleDragStart');
+                     e.preventDefault();
+                  $start_img = $current_img;
+               }
+              function handleDragEnd(e){
+                     e.preventDefault();
+                     console.log('handleDragEnd');
+
+               }
+
+            function preload(arrayOfImages) {
+                   $(arrayOfImages).each(function(){
+                              $('<img/>')[0].src = this;
+                                      // Alternatively you could use:
+                                              // (new Image()).src = this;
+                                                  });
+                                               };
+               var N = 24;
+               var images = new Array();
+               for (i=0; i<N;i++){
+                  images[i] = "galileu-"+i+".jpg";
+               }
+               preload(images);
+
+               var Width = $(window).width(),
+               height = $(window).height();
+               $("body").css("background-color", "black");//rgb(255,0,0);");
+               var toto = document.getElementById('toto');
+               Hammer(toto).on('tap', function(){
+                  alert('toto');
+                  });
+               var $index_img=0;
+               Hammer(toto).on('drag', function(e){
+                     e.preventDefault();
+                     e.gesture.stopPropagation()
+                     e.gesture.preventDefault()
+                     $index_img = Math.max(0, $start_img + Math.round(e.gesture.deltaY/10));
+                     $index_img = Math.min(25, $index_img);
+                     $current_img = $index_img;
+                  $("img#toto").prop("src", "data/galileu-" + String($index_img) + '.jpg');
+		  $("body").css("background-position", "" + Math.round(e.gesture.deltaY/10) + "px "+ Math.round(e.gesture.deltaX/10)+ "px");
+
+               });
+
+
+                });
+      </script>
+   </head>
+   <body style="background-image:url('data/backbrain.jpg')">
+         <img id="toto" height=500 src="data/galileu-0.jpg" style="position:relative; top:1em; left:1em;">
+   </body>
+</html>
