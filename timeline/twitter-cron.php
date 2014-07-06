@@ -7,10 +7,11 @@ $cache = dirname(__FILE__) . '/cache/twitter-json.txt';
 require_once ('codebird.php');
 
 //Twitter OAuth Settings, enter your settings here:
-$CONSUMER_KEY = '2rEbmYpUBOpR5gtcFcepqLH0C';
-$CONSUMER_SECRET = 'K7MU6CQxRoG7VxKnHiS8alxifLxEEFjsp6TbfXIZalwK3VdNM8';
-$ACCESS_TOKEN = '2593795213-nBvpQ2qp4lOBXdfjT78VhqTKkY50GGTWjeiP33K';
-$ACCESS_TOKEN_SECRET = 'LsnEaKUTXGNfxUJypNCTm9lTxnG6Eb506Hyf1ToH0fzhp';
+$credentials = explode("\n", file_get_contents('cache/credentials.txt'));
+$CONSUMER_KEY = $credentials[0];
+$CONSUMER_SECRET = $credentials[1];
+$ACCESS_TOKEN = $credentials[2];
+$ACCESS_TOKEN_SECRET = $credentials[3];
 
 //Get authenticated
 Codebird::setConsumerKey($CONSUMER_KEY, $CONSUMER_SECRET);
