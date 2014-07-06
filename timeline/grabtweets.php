@@ -13,7 +13,7 @@ $params = array(
 );
 
 if ($q == "cache"){
-   $data = file_get_contents('http://eduwenca.tk/twitter/cache/twitter-json.txt');
+   $data = file_get_contents('cache/twitter-json.txt');
    $decode_data = json_decode($data, true);
    echo json_encode(json_encode($decode_data['all']['0']));
 }

@@ -28,7 +28,7 @@ $api = 'lists_statuses'; //$_POST['api'];
 //https://dev.twitter.com/docs/api/1.1/get/search/tweets
 
 //Make the REST call
-$erreur = array(json_decode(file_get_contents('http://eduwenca.tk/twitter/cache/hashtagerror.txt'), true));
+$erreur = array(json_decode(file_get_contents('cache/hashtagerror.txt'), true));
 
 $data = array("all"=> array($cb->lists_statuses('slug=timeline&owner_screen_name=ewlftm')),
    "error"=> $erreur);
