@@ -1,0 +1,63 @@
+{
+  "player": {
+    "geometry": [
+      [
+        [
+          0, 
+          0
+        ], 
+        "#000000"
+      ]
+    ], 
+    "position": [
+      10, 
+      10
+    ], 
+    "location": [
+      [
+        "home", 
+        "street", 
+        "islande"
+      ], 
+      1
+    ], 
+    "activity": [
+      [
+        "active", 
+        "inactive"
+      ], 
+      1
+    ]
+  }, 
+  "porte": {
+    "geometry": [
+      [
+        [
+          0, 
+          0
+        ], 
+        "#000000"
+      ]
+    ], 
+    "position": [
+      5, 
+      5
+    ], 
+    "openstate": [
+      [
+        "open", 
+        "close"
+      ], 
+      0
+    ]
+  }, 
+  "avion": {
+    "destination": [
+      [
+        "home", 
+        "islande"
+      ], 
+      0
+    ]
+  }
+}
