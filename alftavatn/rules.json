@@ -2,26 +2,25 @@
   [
     [
       [
-        "player",
-        "RENTRER",
-        "maison"
+        "maison",
+        "RENTRER"
       ],
       [
         "player",
         "location",
-        2
+        "iceland"
       ]
     ],
     [
       [
         "player",
         "location",
-        0
+        "home"
       ],
       [
         "porte",
         "openstate",
-        0
+        "close"
       ],
 
       [
@@ -36,24 +35,28 @@
       [
         "porte",
         "openstate",
-        0
+        "open"
       ],
       [
-        "player",
-        "FERMER",
-        "porte"
+        "porte",
+        "FERMER"
       ]
     ],
     [
       [
         "porte",
         "openstate",
-        1
+        "close"
       ],
       [
         "player",
         "activity",
-        1
+        "active"
+      ],
+      ["internal",
+      "nb_actions",
+      "@ADD(internal.nb_actions, 1)"
+
       ],
 
       [
@@ -68,19 +71,18 @@
       [
         "porte",
         "openstate",
-        1
+        "close"
       ],
       [
-        "player",
-        "OUVRIR",
-        "porte"
+        "porte",
+        "OUVRIR"
       ]
     ],
     [
       [
         "porte",
         "openstate",
-        0
+        "open"
       ],
       [
         "SYSTEM",
@@ -94,22 +96,21 @@
       [
         "porte",
         "openstate",
-        0
+        "open"
       ],
       [ "player",
 	"location",
-	0],
+	"home"],
       [
-        "player",
-        "SORTIR",
-        "porte"
+        "porte",
+        "SORTIR"
       ]
     ],
     [
       [
         "player",
         "location",
-        1
+        "street"
       ],
       [
         "SYSTEM",
@@ -123,22 +124,21 @@
       [
         "porte",
         "openstate",
-        0
+        "open"
       ],
       [ "player",
 	"location",
-	1],
+	"street"],
       [
-        "player",
-        "ENTRER",
-        "porte"
+        "porte",
+        "ENTRER"
       ]
     ],
     [
       [
         "player",
         "location",
-        0
+        "home"
       ],
       [
         "SYSTEM",
@@ -152,23 +152,31 @@
       [
         "player",
         "location",
-        1
+        "street"
       ],
-      [ "player",
-	"PRENDRE",
-	"avion"]
+      [ "avion",
+	"PRENDRE"
+	]
     ],
     [
       [
         "player",
         "location",
-        2
+        "iceland"
       ],
       [
         "SYSTEM",
         "PRINT",
         "VOUS ETES EN ISLANDE"
-      ]
+      ],
+["SYSTEM","PRINT","@VALUE(internal.nb_actions)"]
     ]
-  ]
+  ],
+  [[["timer","START"]],[["timer","START"]]],
+  [[["timer","STOP"]],[["timer","STOP"]]],
+  [[["timer","CHECK_ICELAND"]],[["timer","CHECK_ICELAND"]]],
+  [[["timer","TICK"]],[["internal", "uptime", "@ADD(internal.uptime, 1)"]]],
+  [[["timer","PRINT_UPTIME"]],[["SYSTEM", "PRINT", "@VALUE(internal.uptime)"]]],
+  [[["ANY player", "location", "iceland"], ["timer", "CHECK_ICELAND"]],[["SYSTEM", "PRINT", "Yes !"]]]
+
 ]

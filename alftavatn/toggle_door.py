@@ -4,8 +4,8 @@ modelfp = '/home/pi/alftavatn/model.json'
 actionsfp = '/home/pi/alftavatn/actions.txt'
 
 j = json.load(open(modelfp))
-if (j['porte']['openstate'][1] == 0):
-  os.system('echo "player,FERMER,porte" > %s'%actionsfp);
-elif (j['porte']['openstate'][1] == 1):
-  os.system('echo "player,OUVRIR,porte" > %s'%actionsfp);
+if (j['porte']['openstate'] == 'open'):
+  os.system('echo "porte,FERMER" > %s'%actionsfp);
+elif (j['porte']['openstate'] == 'close'):
+  os.system('echo "porte,OUVRIR" > %s'%actionsfp);
 

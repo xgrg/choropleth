@@ -1,5 +1,6 @@
 {
   "player": {
+    "name": "Greg", 
     "geometry": [
       [
         [
@@ -9,25 +10,19 @@
         "#000000"
       ]
     ], 
+    "location": "iceland", 
+    "activity": "active", 
     "position": [
       10, 
       10
     ], 
-    "location": [
-      [
-        "home", 
-        "street", 
-        "islande"
-      ], 
-      1
-    ], 
-    "activity": [
-      [
-        "active", 
-        "inactive"
-      ], 
-      1
+    "types": [
+      "player"
     ]
+  }, 
+  "internal": {
+    "uptime": 1040, 
+    "nb_actions": 5
   }, 
   "porte": {
     "geometry": [
@@ -43,21 +38,18 @@
       5, 
       5
     ], 
-    "openstate": [
-      [
-        "open", 
-        "close"
-      ], 
-      0
-    ]
+    "openstate": "open"
   }, 
   "avion": {
-    "destination": [
-      [
-        "home", 
-        "islande"
-      ], 
-      0
-    ]
+    "destination": "home"
+  }, 
+  "maison": {}, 
+  "timer": {
+    "running": "True", 
+    "interval": 0.1, 
+    "types": [
+      "timer"
+    ], 
+    "periodic": "True"
   }
 }

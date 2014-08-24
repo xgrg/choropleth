@@ -14,18 +14,38 @@ while (rules is None or model is None):
    except:
       pass
 
-if len(args)==2:
-   s = args[0]
-   o = args[1]
+if len(args)==1:
+   o = args[0]
    actions = set()
    for (conditions, implications) in rules:
       satisfied = True
-      for (obj, prop, val) in conditions:
-         if not prop.isupper() and model[obj][prop][1] != val:
-            satisfied = False
-            break
-         elif obj == s and prop.isupper() and val == o:
-            actions.add(prop)
+      for c in conditions:
+         if len(c) == 3:
+            (obj, prop, val) = c
+            if obj.startswith('ANY '):
+                      t = obj[4:]
+                      objects_satisfying = []
+                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                          if model[each][prop] == val:
+                              objects_satisfying.append(each)
+                      if len(objects_satisfying) == 0:
+                          satisfied = False
+            elif obj.startswith('ALL '):
+                      t = obj[4:]
+                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                          if model[each][prop] != val:
+                              satisfied = False
+            elif model[obj][prop] != val:
+               satisfied = False
+               break
+         elif len(c) == 2:
+            (obj, action) = c
+            assert(action.isupper())
+            if obj != o:
+               satisfied = False
+               break
+      if satisfied:
+         actions.add(action)
 
    print ','.join(actions)
 

@@ -1,72 +1,201 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import os, sys, json
+from alftavatn import *
+
 actionsfile = '/home/pi/alftavatn/actions.txt'
 modelfile = '/home/pi/alftavatn/model.json'
 rulesfile = '/home/pi/alftavatn/rules.json'
-dialogsfile = '/var/www/alftavatn/data.txt'
+dialogsfile = '/var/www/alftavatn/data/data.txt'
 
-def process_rules ( model, rules, action ) :
-    changes = -1
-    iter_nb = 0
-    has_changed = False
+timers = {}
 
-    while changes != 0:
-        iter_nb = iter_nb + 1
-        changes = 0
+class Model(dict):
+    def __init__(self, jsonfile):
+        self.update(json.load(jsonfile))
+
+    def initialize(self):
+        self.changes = -1
+        self.has_changed = False
+        self.iter_nb = 0
+        self.processed_rules = {}
+        self.print_buffer = []
+
+    def apply_change(self, obj, prop, val, verbose=True):
+        self.changes = self.changes + 1
+        if verbose:
+            print '    => apply change to %s.%s'%(obj, prop), '(', self[obj][prop], '->', val, ')'
+        self[obj][prop] = val
+        self.has_changed = True
+
+    def iterate(self, rules, action):
+
+        def tick(obj, model):
+           print '*** Thread just ended for object', model[obj], 'with timer', timers[obj]
+           os.system('echo "%s,%s" >> %s'%(obj, "TICK", actionsfile))
+           if model[obj]['periodic'] == 'False':
+               print '   this is not a periodic one, sending STOP action and popping out timer', timers[obj]
+               assert(model[obj]['running'] == 'True')
+               os.system('echo "%s,STOP" >> %s'%(obj, actionsfile))
+               timers.pop(obj)
+
+
+        self.iter_nb = self.iter_nb + 1
+        self.changes = 0
+
         for conditions, implications in rules :
             conditionsAreSatisfied = True
-            for obj, prop, val in conditions:
-                if prop.isupper() and not action is None:
-                    #print rule[0][each], action
-                    if (obj, prop, val) != action :
+
+            for c in conditions:
+               if len(c) == 3:
+                  (obj, prop, val) = c
+                  if obj.startswith('ANY '):
+                      t = obj[4:]
+                      objects_satisfying = []
+                      for each in [o for o in self if 'types' in self[o] and t in self[o]['types']]:
+                          if self[each][prop] == val:
+                              objects_satisfying.append(each)
+                      if len(objects_satisfying) == 0:
+                          conditionsAreSatisfied = False
+
+                  elif obj.startswith('ALL '):
+                      t = obj[4:]
+                      for each in [o for o in self if 'types' in self[o] and t in self[o]['types']]:
+                          if self[each][prop] != val:
+                              conditionsAreSatisfied = False
+
+                  elif self[obj][prop] != val:
+                     conditionsAreSatisfied = False
+
+               elif len(c) == 2:
+                  (obj, act) = c
+                  assert(act.isupper())
+                  if not action is None:
+                    if (obj, act) != action :
                         conditionsAreSatisfied = False
-                elif prop.isupper() and action is None:
+                  else:
                     conditionsAreSatisfied = False
-                elif not prop.isupper():
-                    #print machine_states[each], rule[0][each]
-                    if model[obj][prop][1] != val:
-                        conditionsAreSatisfied = False
+
+               else:
+                  raise Exception('Condition should have 2 or 3 items (%s given)'%len(i))
+
             if conditionsAreSatisfied :
-                print 'ok'
-                for obj, prop, val in implications :
-                    if prop == 'PRINT':
-                        os.system('echo "%s" >> %s'%(val, dialogsfile))
-                    elif prop.isupper():
-                       os.system('echo "%s,%s,%s" >> %s'%(obj, prop, val, actionsfile))
-                    else :
-                        if model[obj][prop][1] != val :
-                            changes = changes + 1
-                            print changes, obj, prop, model[obj][prop][0][model[obj][prop][1]], '->', val
-                            model[obj][prop][1] = val
-                            has_changed = True
-            #else :
-                #print 'not ok'
-        #print "iteration :", iter_nb, "changes :", changes
+                print '* Conditions', conditions,'are satisfied... with action', action
 
-    if has_changed:
-     json.dump(model, open(modelfile, 'w'), indent=2)
-    if not action is None:
-      f = open(actionsfile, 'w')
-      f.close()
+                # If some action provided
+                if not action is None :
+                   if 'types' in self[obj] and 'timer' in self[obj]['types']:
+                       if action[1] == 'START' :
+                         if self[action[0]]['running'] == 'False' :
+                            self.apply_change(action[0], 'running', 'True')
+
+                       if (action[1] == 'TICK' and self[action[0]]['running'] == 'True' and self[action[0]]['periodic'] == 'True') or action[1] == 'START':
+                           import threading
+                           if (action[1] == 'START' and not action[0] in timers) or (action[1] == 'TICK' and not timers[action[0]].is_alive()):
+                               print "  Running a thread (either START or periodic TICK) with action", action
+                               timers[action[0]] = threading.Timer(self[action[0]]['interval'], tick, args=[action[0], self])
+                               timers[action[0]].start()
+                               print '     timers are', timers
+                           else:
+                               print '     not running another thread for action', action
+                               # second pass due to has_changed = True -> ignore it
+                               pass
+
+                       elif action[1] == 'STOP':
+                           if self[action[0]]['running'] == 'True' :
+                               self.apply_change(action[0], 'running', 'False')
+                           if action[0] in timers:
+                               timers[action[0]].cancel()
+                               timers.pop(action[0])
+                           else:
+                               print '(timer', action[0], 'not found in', timers, ')'
 
 
-try :
-   os.system('echo "STATE MACHINE STARTED" > %s'%dialogsfile)
-   while(True):
-      actions = [e.rstrip('\n') for e in open(actionsfile).readlines()]
-      model = json.load(open(modelfile))
-      rules = json.load(open(rulesfile))
-      if len(actions) != 0:
-         for a in actions:
-            src, act, obj = a.split(',')
-            print obj, act
-            process_rules(model, rules, (src, act, obj))
-      else:
-            process_rules(model, rules, None)
 
-except:
-   e = sys.exc_info()
-   s = str(e)
-   os.system('echo "STATE MACHINE STOPPED %s" >> %s'%(s, dialogsfile))
-   raise
+                for i in implications :
+
+                   if len(i) == 3:
+                      (obj, prop, val) = i
+                      if val in self.processed_rules:
+                          continue
+                      if isinstance(val, basestring):
+                          if val[0] == '@':
+                             f = val
+                             operations = parse_function(val)
+                             val = solve_function(operations, self)
+                             self.processed_rules[f] = val
+                      if prop == 'PRINT':
+                          self.print_buffer.append(val)
+                      else :
+                         if not isinstance(self[obj][prop], type(val)):
+                            print 'Rule "%s" is changing property "%s" from type "%s" to "%s" on object "%s"'%(i, prop, type(self[obj][prop]), type(val), obj)
+
+                         if self[obj][prop] != val :
+                             self.apply_change(obj, prop, val)
+
+                   elif len(i) == 2:
+                      (obj, act) = i
+                      assert(act.isupper())
+                      if i != list(action):
+                         os.system('echo "%s,%s" >> %s'%(obj, act, actionsfile))
+
+                   else:
+                      raise Exception('Implication should have 2 or 3 items (%s given)'%len(i))
+
+def process_rules ( model, rules, action ) :
+
+    model.initialize()
+    prevchanges = False
+
+    if not action is None :
+       old = open(actionsfile).readlines()
+       f = open(actionsfile, 'w')
+       found = 0
+       for e in old:
+           e2 = e.rstrip('\n').split(',')
+           if e2 != list(action) or found != 0:
+               f.write(e)
+           else:
+               found = found + 1
+       print '(%s action %s found and removed from actions file)'%(found, action)
+       f.close()
+
+    while model.changes != 0:
+        model.iterate(rules, action)
+        if model.changes != 0:
+            print '(model has met %s changes during last iteration, going for another round)\n'%model.changes
+            prevchanges = True
+        elif prevchanges:
+            print '(model has met 0 changes during last iteration, exiting loop)\n'
+
+
+    if model.has_changed:
+       json.dump(model, open(modelfile, 'w'), indent=2)
+
+    for each in model.print_buffer:
+      os.system('echo "%s" >> %s'%(each, dialogsfile))
+
+
+if __name__ == '__main__':
+   try :
+      os.system('echo "STATE MACHINE STARTED" > %s'%dialogsfile)
+      while(True):
+         actions = [e.rstrip('\n') for e in open(actionsfile).readlines()]
+         model = Model(open(modelfile))
+         rules = json.load(open(rulesfile))
+         if len(actions) != 0:
+            for a in actions:
+               obj, act = a.split(',')
+               print ''
+               print '=== Read action', obj, act, ', now provided to the system. ==='
+               print ''
+               process_rules(model, rules, (obj, act))
+         else:
+               process_rules(model, rules, None)
+
+   except:
+      e = sys.exc_info()
+      s = str(e)
+      os.system('echo "STATE MACHINE STOPPED %s" >> %s'%(s, dialogsfile))
+      raise
