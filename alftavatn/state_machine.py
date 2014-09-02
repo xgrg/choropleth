@@ -4,10 +4,14 @@
 import os, sys, json
 from alftavatn import *
 
-actionsfile = '/home/pi/alftavatn/actions.txt'
-modelfile = '/home/pi/alftavatn/model.json'
-rulesfile = '/home/pi/alftavatn/rules.json'
-dialogsfile = '/var/www/alftavatn/data/data.txt'
+homedir = os.path.dirname(os.path.abspath(__file__))
+modelfile = os.path.join(homedir, 'model.json')
+rulesfile = os.path.join(homedir, 'rules.json')
+
+tmpdir = '/tmp'
+dialogsfile = os.path.join(tmpdir, 'data.txt')
+fovfile = os.path.join(tmpdir, 'visible.txt')
+actionsfile = os.path.join(tmpdir, 'actions.txt')
 
 timers = {}
 
@@ -21,6 +25,19 @@ class Model(dict):
         self.iter_nb = 0
         self.processed_rules = {}
         self.print_buffer = []
+
+#        # Stopping timers
+#        for timer in [e for e in self if 'timer' in self[e].get('types', [])]:
+#            if self[timer]['running'] == 'True':
+#                self.apply_change(timer, 'running', 'False')
+#        if self.changes != -1:
+#            print 'stopped %s timers'%(self.changes + 1)
+#            self.changes = -1
+
+        # Initializing field-of-views
+        viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
+        self.fov = dict( [(i, self[i]['visible']) for i in viewers])
+        self.update_fov = False
 
     def apply_change(self, obj, prop, val, verbose=True):
         self.changes = self.changes + 1
@@ -85,7 +102,7 @@ class Model(dict):
 
                 # If some action provided
                 if not action is None :
-                   if 'types' in self[obj] and 'timer' in self[obj]['types']:
+                   if 'timer' in self[obj].get('types',[]):
                        if action[1] == 'START' :
                          if self[action[0]]['running'] == 'False' :
                             self.apply_change(action[0], 'running', 'True')
@@ -117,14 +134,15 @@ class Model(dict):
 
                    if len(i) == 3:
                       (obj, prop, val) = i
-                      if val in self.processed_rules:
-                          continue
                       if isinstance(val, basestring):
                           if val[0] == '@':
+                             if val in self.processed_rules:
+                                 continue
                              f = val
                              operations = parse_function(val)
                              val = solve_function(operations, self)
                              self.processed_rules[f] = val
+
                       if prop == 'PRINT':
                           self.print_buffer.append(val)
                       else :
@@ -133,6 +151,10 @@ class Model(dict):
 
                          if self[obj][prop] != val :
                              self.apply_change(obj, prop, val)
+                             print self[obj].get('types', []), obj
+                             if 'viewer' in self[obj].get('types', []) and prop == 'visible':
+                                self.fov.update({obj : self[obj]['visible']})
+                                self.update_fov = True
 
                    elif len(i) == 2:
                       (obj, act) = i
@@ -169,6 +191,15 @@ def process_rules ( model, rules, action ) :
         elif prevchanges:
             print '(model has met 0 changes during last iteration, exiting loop)\n'
 
+    if model.update_fov:
+       print model.fov
+       d = {}
+       for v in model.fov:
+          for each in model.fov[v]:
+             if 'image' in model[each]:
+                d.setdefault(v, []).append('%s.%s'%(each, model[each]['image']))
+       print d
+       json.dump(d, open(fovfile, 'w'), indent=2)
 
     if model.has_changed:
        json.dump(model, open(modelfile, 'w'), indent=2)
