@@ -58,8 +58,11 @@ def solve_function(operations, model = None):
       elif isinstance(o, int):
          params.append(o)
       elif isinstance(o, basestring):
-         obj, prop = o.split('.')
-         params.append(model[obj][prop])
+         if '.' in o:
+            obj, prop = o.split('.')
+            params.append(model[obj][prop])
+         else:
+            params.append(o)
       else:
          raise Exception('Operation type not recognized : %s (%s)'%(o, type(o)))
 
@@ -71,6 +74,18 @@ def solve_function(operations, model = None):
    elif fname == 'value':
       if len(params) !=1: raise Exception('Function VALUE should have 1 parameter (%s given)'%len(params))
       return params[0]
+   elif fname == 'append':
+      if len(params) !=2: raise Exception('Function APPEND should have 2 parameters (%s given)'%len(params))
+      assert(isinstance(params[0], list))
+      t = list(set(params[0]))
+      t.append(params[1])
+      return t
+   elif fname == 'remove':
+      if len(params) !=2: raise Exception('Function REMOVE should have 2 parameters (%s given)'%len(params))
+      assert(isinstance(params[0], list))
+      t = list(set(params[0]))
+      t.remove(params[1])
+      return t
 
 
    raise Exception('Operation type not recognized : %s'%o)
