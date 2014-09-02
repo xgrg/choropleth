@@ -1,0 +1,155 @@
+<html>
+   <head>
+      <link href='http://fonts.googleapis.com/css?family=Roboto:100' rel='stylesheet' type='text/css'>
+
+      <meta charset="UTF-8">
+      <link rel="stylesheet" href="{{ static_url("styles/style.css") }}">
+      <link rel="stylesheet" href="{{ static_url("styles/token-input.css") }}" type="text/css" />
+      <link rel="stylesheet" href="{{ static_url("styles/token-input-facebook.css") }}" type="text/css" />
+
+      <script type="text/javascript" src="{{ static_url("js/jquery.min.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/jquery.tokeninput.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/client.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/jquery.gridalicious.min.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/clickitem.js") }}"></script>
+      <script type="text/javascript">
+
+
+         $(document).ready(function(){
+            $("#rules").html("toto");
+            $("input[type=button]#tokensubmit").click(function () {
+               var items = $(this).siblings("input[type=text]").val();
+               items = items.split(',');
+               console.log(items);
+               if (items.length == 2){
+                  var res = $.ajax({type:"POST", url:"", data: {'dialog': items[0] + ',' + items[1]}, async:false} ).responseText;
+                  var res = $.ajax({type:"POST", url:"", data: {'action':items[1], 'object': items[0]}, async:false} ).responseText;
+               }
+            });
+            $("input[type=button]#tokensubmit").keypress(function(event) {
+                if (event.which == 13) {
+                  event.preventDefault();
+                  $("input[type=button]#tokensubmit").click();
+                }
+                else if (event.which == 9){
+                  event.preventDefault();
+                  $("#demo-input").tokenInput("focus");
+                }
+            });
+
+            $('#refreshmodel').click(function(){
+               var res = $.ajax({type:"POST", url:"", data: {'refreshmodel': 'True'}, async:false} ).responseText;
+               console.log(res);
+               $("#jstwitter").html(res);
+               $("#jstwitter").gridalicious({
+                  gutter: 13,
+                     width: 151,
+                     animate: true,
+                     animationOptions: {
+                        queue : true,
+                        speed: 500,
+                        duration: 500
+                     }
+               });
+            });
+
+            $('#refreshcanvas').click(function(){
+               if ($("#fov").html().length > 0){
+                  if (!("player" in JSON.parse($("#fov").html()))) {
+                     return '';
+                  }
+                  var j = JSON.parse($("#fov").html())['player'].toString();
+                  var res = $.ajax({type:"POST", url:"", data: {'fov': 'True'}, async:false} ).responseText;
+                  $("#canvas").html(res);
+                  $("#canvas").gridalicious({
+                     gutter: 13,
+                        width: 151,
+                        animate: true,
+                        animationOptions: {
+                           queue : true,
+                           speed: 500,
+                           duration: 500
+                        }
+                  });
+               }
+            });
+
+            var html = get_objects();
+            $('#objects').html(html);
+
+            $("span.object").click(function(){
+               click_item($(this));
+            });
+
+            $("#adddialog").click(function(){
+               var res = $.ajax({type:"POST", url:"", data: {'toto':'tata','dialog': "oh yeah c'est cool!"}, async:false} ).responseText;
+            });
+            $("#toggledoor").click(function(){
+               var res = $.ajax({type:"POST", url:"", data: {'toggle_door': 'True'}, async:false} ).responseText;
+            });
+            $("#cleandata").click(function(){
+               var res = $.ajax({type:"POST", url:"", data: {'clean_data': 'True'}, async:false} ).responseText;
+            });
+
+
+            $("#rules").html('{{rules}}');
+
+            $("#refreshmodel").click();
+            $("#refreshcanvas").click();
+
+            $("#demo-input").tokenInput("list_tokens", {
+                  tokenValue : 'name',
+                     onAdd : function(item){
+                        $(this).data("settings").url = 'list_tokens?object=' + $(this).tokenInput("get")[0].name;
+                        $(this).data("settings").queryParam = 'qa';
+                        $(this).data("settings").resultsFormatter = function(item){return "<li>"+item.name+"</li>";};
+                  },
+                  onDelete: function(item){
+                        if (typeof(item) !== 'undefined' && item.type == 'object'){
+                           $(this).tokenInput('clear');
+                           $(this).data("settings").url = 'list_tokens'
+                           $(this).data("settings").queryParam = 'q';
+                           $(this).data("settings").resultsFormatter = function(item) {return tokenformat(item);};
+                        }
+                  },
+                  resultsFormatter: function(item){ return tokenformat(item);},
+                  theme: 'facebook'});
+
+         });
+
+      </script>
+   </head>
+
+
+   <body>
+      <h2>Alftavatn</h2>
+      <div id="canvas"></div>
+      <span id="refreshcanvas"> refresh</span>
+
+      <div id="fov"></div><br>
+      <div id="response"></div> <br>
+      <div>
+      <input type="text" id="demo-input" name="blah" />
+      <input id="tokensubmit" type="button" value="Submit" />
+      </div>
+      <br>
+
+      <div id="objects" style="border:solid 1px black"> </div>
+      <br>
+      <div id="actions" style="border:solid 1px black"> </div>
+      <br>
+      <div id="adddialog" style="border:solid 1px black">add_dialog </div>
+      <div id="toggledoor" style="border:solid 1px black">toggle_door </div>
+      <div id="cleandata" style="border:solid 1px black">clean_data </div>
+      <br>
+
+<!-- Include model and rules view -->
+      <br>
+      <div id="jstwitter"></div>
+      <span id="refreshmodel"> refresh</span>
+      <div id="rules"></div>
+
+    <br>
+<br>
+(c) GO 2013
+</body></html>
