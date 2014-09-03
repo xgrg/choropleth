@@ -8,8 +8,8 @@ clients = []
 last_ajax_call = None
 s= ''
 homedir = os.path.dirname(os.path.abspath(__file__))
-modelfp = os.path.join(homedir, 'model.json')
-rulesfp = os.path.join(homedir, 'rules.json')
+modelfp = os.path.join(homedir, 'data', 'model.json')
+rulesfp = os.path.join(homedir, 'data', 'rules.json')
 
 datafile = os.path.join('/tmp', 'data.txt')
 visiblefile = os.path.join('/tmp', 'visible.txt')
@@ -24,7 +24,7 @@ def get_canvas_cards():
     for each in fov:
         k = each.split('.')
         item = '<b>' + k[0] + '</b><br>'
-        item = item + '<img src="static/%s.png" /><br>'%k[1]
+        item = item + '<img src="static/data/%s.png" /><br>'%k[1]
         output1 = output1 + '<div class="item"><div class="tweet-wrapper"><span class="text">' + item + '</span></div></div>'
     return output1
 
@@ -73,7 +73,7 @@ class IndexHandler(tornado.web.RequestHandler):
           act = self.get_argument('action')
           os.system('echo "%s,%s" >> %s'%(obj, act, actionsfp))
       elif 'get_objects' in self.request.arguments:
-           from get_objects import get_objects
+           from alftavatn import get_objects
 
            rules = None
            model = None
@@ -88,7 +88,7 @@ class IndexHandler(tornado.web.RequestHandler):
            self.write(','.join(objects))
 
       elif 'get_actions' in self.request.arguments:
-           from get_actions import get_actions
+           from alftavatn import get_actions
            obj = self.get_argument('object')
 
            rules = None
@@ -121,7 +121,7 @@ class TokenHandler(tornado.web.RequestHandler):
             arr = []
             for v in keys_starting_with_q:
                p = {"id" : i, "name" : v, "type" : "object"}
-               p["image"] = 'static/' + model[v]["image"] + '.png' if "image" in model[v] else ""
+               p["image"] = 'static/data' + model[v]["image"] + '.png' if "image" in model[v] else ""
                arr.append(p)
                i = i + 1
 
@@ -180,9 +180,10 @@ class TestHandler(tornado.websocket.WebSocketHandler):
   def on_close(self):
      clients.remove(self)
 
-app = tornado.web.Application(handlers = [(r'/', IndexHandler), (r'/poll', LongPollingHandler), (r'/list_tokens', TokenHandler)],
-        static_path = homedir, autoescape = None)
+if __name__ == '__main__':
+    app = tornado.web.Application(handlers = [(r'/', IndexHandler), (r'/poll', LongPollingHandler), (r'/list_tokens', TokenHandler)],
+            static_path = homedir, autoescape = None)
 
-app.listen(8000)
-tornado.ioloop.IOLoop.instance().start()
+    app.listen(8000)
+    tornado.ioloop.IOLoop.instance().start()
 

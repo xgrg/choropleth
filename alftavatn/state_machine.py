@@ -5,8 +5,8 @@ import os, sys, json
 from alftavatn import *
 
 homedir = os.path.dirname(os.path.abspath(__file__))
-modelfile = os.path.join(homedir, 'model.json')
-rulesfile = os.path.join(homedir, 'rules.json')
+modelfile = os.path.join(homedir, 'data', 'model.json')
+rulesfile = os.path.join(homedir, 'data', 'rules.json')
 
 tmpdir = '/tmp'
 dialogsfile = os.path.join(tmpdir, 'data.txt')
@@ -207,8 +207,21 @@ def process_rules ( model, rules, action ) :
     for each in model.print_buffer:
       os.system('echo "%s" >> %s'%(each, dialogsfile))
 
+from server import IndexHandler, LongPollingHandler, TokenHandler
+import tornado
+
 
 if __name__ == '__main__':
+   app = tornado.web.Application(handlers = [(r'/', IndexHandler), (r'/poll', LongPollingHandler), (r'/list_tokens', TokenHandler)],
+        static_path = homedir, autoescape = None)
+   app.listen(8000)
+   import threading, time
+   # The tornado IO loop doesn't need to be started in the main thread
+   # so let's start it in another thread:
+   t = threading.Thread(target=tornado.ioloop.IOLoop.instance().start)
+   t.daemon = True
+   t.start()
+   print 'yeah'
    try :
       os.system('echo "STATE MACHINE STARTED" > %s'%dialogsfile)
       while(True):
