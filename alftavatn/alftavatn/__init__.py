@@ -1,6 +1,73 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+def get_actions(o, model, rules):
+   ''' o is an object from which the function returns a list of associated actions.'''
+   actions = set()
+   for (conditions, implications) in rules:
+      satisfied = True
+      for c in conditions:
+         if len(c) == 3:
+            (obj, prop, val) = c
+            if obj.startswith('ANY '):
+                      t = obj[4:]
+                      objects_satisfying = []
+                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                          if model[each][prop] == val:
+                              objects_satisfying.append(each)
+                      if len(objects_satisfying) == 0:
+                          satisfied = False
+            elif obj.startswith('ALL '):
+                      t = obj[4:]
+                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                          if model[each][prop] != val:
+                              satisfied = False
+            elif model[obj][prop] != val:
+               satisfied = False
+               break
+         elif len(c) == 2:
+            (obj, action) = c
+            assert(action.isupper())
+            if obj != o:
+               satisfied = False
+               break
+      if satisfied:
+         actions.add(action)
+   return actions
+
+
+def get_objects(model, rules):
+   '''Returns a list of objects existing in the current model.'''
+   objects = set()
+   for (conditions, implications) in rules:
+      satisfied = True
+      for c in conditions:
+         if len(c) == 3:
+            (obj, prop, val) = c
+            if obj.startswith('ANY '):
+                      t = obj[4:]
+                      objects_satisfying = []
+                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                          if model[each][prop] == val:
+                              objects_satisfying.append(each)
+                      if len(objects_satisfying) == 0:
+                          satisfied = False
+            elif obj.startswith('ALL '):
+                      t = obj[4:]
+                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                          if model[each][prop] != val:
+                              satisfied = False
+            elif model[obj][prop] != val:
+               satisfied = False
+               break
+         elif len(c) == 2:
+            (obj, action) = c
+            assert(action.isupper())
+            candidate = obj
+      if satisfied:
+         objects.add(candidate)
+   return objects
+
 def parse_function(f):
    import string
 
