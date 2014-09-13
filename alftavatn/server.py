@@ -11,15 +11,22 @@ homedir = os.path.dirname(os.path.abspath(__file__))
 modelfp = os.path.join(homedir, 'data', 'model.json')
 rulesfp = os.path.join(homedir, 'data', 'rules.json')
 
-datafile = os.path.join('/tmp', 'data.txt')
-visiblefile = os.path.join('/tmp', 'visible.txt')
-actionsfp = os.path.join('/tmp', 'actions.txt')
+#datafile = os.path.join('/tmp', 'data.txt')
+#visiblefile = os.path.join('/tmp', 'visible.txt')
+#actionsfp = os.path.join('/tmp', 'actions.txt')
 
 
 
 def get_canvas_cards():
-    fov = json.load(open(visiblefile))
-    fov = fov['player']
+    model = json.load(open(modelfp))
+    viewers = [e for e in model if 'viewer' in model[e].get('types',[])]
+    fov = dict( [(i, model[i]['visible']) for i in viewers])
+    d = {}
+    for v in fov:
+      for each in fov[v]:
+         if 'image' in model[each]:
+            d.setdefault(v, []).append('%s.%s'%(each, model[each]['image']))
+    fov = d['player']
     output1 = ''
     for each in fov:
         k = each.split('.')
@@ -38,12 +45,6 @@ def get_model_cards():
                 item = item + ' &nbsp;&nbsp;&nbsp;' + p + ' = ' + str(obj[p]) + '<br>'
         output = output + '<div class="item"><div class="tweet-wrapper"><span class="text">' + item + '</span></div></div>'
     return output
-
-def foo(clients, message, s):
-   s = s + '*'
-   for client in clients:
-      client.write_message(s)
-   threading.Timer(1, foo, args=[clients,message,s]).start()
 
 class IndexHandler(tornado.web.RequestHandler):
   def get(self):
@@ -71,7 +72,8 @@ class IndexHandler(tornado.web.RequestHandler):
       elif 'send_action' in self.request.arguments:
           obj = self.get_argument('object')
           act = self.get_argument('action')
-          os.system('echo "%s,%s" >> %s'%(obj, act, actionsfp))
+          #os.system('echo "%s,%s" >> %s'%(obj, act, actionsfp))
+          self.actions.append("%s,%s"%(obj, act))
       elif 'get_objects' in self.request.arguments:
            from alftavatn import get_objects
 
@@ -157,6 +159,7 @@ class TokenHandler(tornado.web.RequestHandler):
 class LongPollingHandler(tornado.web.RequestHandler):
     @gen.coroutine
     def post(self):
+         return
          mtime = os.stat(datafile)[8]
          last_ajax_call = self.get_argument('timestamp') if 'timestamp' in self.request.arguments else None
          if (last_ajax_call is None or mtime > last_ajax_call):
@@ -172,10 +175,16 @@ class TestHandler(tornado.websocket.WebSocketHandler):
   def open(self, *args):
     print("open", "WebSocketChatHandler")
     self.last_ajax_call = None
+    self.data = []
+    self.actions = []
     clients.append(self)
 
   def on_message(self, message):
      print message
+     action, params = message.split('@')
+     if action == 'DIALOG':
+         self.data.append(params)
+         self.write_message(params)
 
   def on_close(self):
      clients.remove(self)

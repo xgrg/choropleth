@@ -165,19 +165,21 @@ class Model(dict):
                    else:
                       raise Exception('Implication should have 2 or 3 items (%s given)'%len(i))
 
-def process_rules ( model, rules, action ) :
+def process_rules ( model, rules, action, app ) :
 
     model.initialize()
     prevchanges = False
 
     if not action is None :
-       old = open(actionsfile).readlines()
-       f = open(actionsfile, 'w')
+       #old = open(actionsfile).readlines()
+       old = app.named_handlers['ws'].actions
+       app.named_handlers['ws'].actions = []
+       #f = open(actionsfile, 'w')
        found = 0
        for e in old:
            e2 = e.rstrip('\n').split(',')
-           if e2 != list(action) or found != 0:
-               f.write(e)
+           if e2 == list(action) and found == 0:
+               app.named_handlers['ws'].actions.pop(e)
            else:
                found = found + 1
        print '(%s action %s found and removed from actions file)'%(found, action)
@@ -199,21 +201,29 @@ def process_rules ( model, rules, action ) :
              if 'image' in model[each]:
                 d.setdefault(v, []).append('%s.%s'%(each, model[each]['image']))
        print d
-       json.dump(d, open(fovfile, 'w'), indent=2)
+       #json.dump(d, open(fovfile, 'w'), indent=2)
+       app.named_handlers['ws'].fov = d
 
     if model.has_changed:
        json.dump(model, open(modelfile, 'w'), indent=2)
 
     for each in model.print_buffer:
-      os.system('echo "%s" >> %s'%(each, dialogsfile))
+       app.named_handlers['ws'].data.append(each)
+      #os.system('echo "%s" >> %s'%(each, dialogsfile))
 
-from server import IndexHandler, LongPollingHandler, TokenHandler
+from server import IndexHandler, LongPollingHandler, TokenHandler, TestHandler
 import tornado
+from tornado import web
 
 
 if __name__ == '__main__':
-   app = tornado.web.Application(handlers = [(r'/', IndexHandler), (r'/poll', LongPollingHandler), (r'/list_tokens', TokenHandler)],
-        static_path = homedir, autoescape = None)
+
+
+   app = tornado.web.Application(handlers = [web.url(r'/', IndexHandler),
+                                             web.url(r'/poll', LongPollingHandler),
+                                             web.url(r'/list_tokens', TokenHandler),
+                                             web.url(r'/websocket', TestHandler, name='ws')],
+                                             static_path = homedir, autoescape = None)
    app.listen(8000)
    import threading, time
    # The tornado IO loop doesn't need to be started in the main thread
@@ -225,7 +235,10 @@ if __name__ == '__main__':
    try :
       os.system('echo "STATE MACHINE STARTED" > %s'%dialogsfile)
       while(True):
-         actions = [e.rstrip('\n') for e in open(actionsfile).readlines()]
+         #actions = [e.rstrip('\n') for e in open(actionsfile).readlines()]
+         actions = []
+         if hasattr(app.named_handlers['ws'], 'actions'):
+            actions = getattr(app.named_handlers['ws'], 'actions')
          model = Model(open(modelfile))
          rules = json.load(open(rulesfile))
          if len(actions) != 0:
@@ -234,9 +247,9 @@ if __name__ == '__main__':
                print ''
                print '=== Read action', obj, act, ', now provided to the system. ==='
                print ''
-               process_rules(model, rules, (obj, act))
+               process_rules(model, rules, (obj, act), app)
          else:
-               process_rules(model, rules, None)
+               process_rules(model, rules, None, app)
 
    except:
       e = sys.exc_info()

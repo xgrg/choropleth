@@ -16,12 +16,24 @@
 
 
          $(document).ready(function(){
+            var ws = new WebSocket("ws://localhost:8000/websocket");
+
+            ws.onopen = function() {
+            };
+            ws.onmessage = function (evt) {
+               $("#response").html($("#response").html() + "<br>" + evt.data);
+            };
+
             $("#rules").html("toto");
             $("input[type=button]#tokensubmit").click(function () {
                var items = $(this).siblings("input[type=text]").val();
                items = items.split(',');
                console.log(items);
                if (items.length == 2){
+
+                  ws.send("DIALOG@"+items[0] +', '+items[1]);
+                  ws.send('ACTION@'+ items[1]+'@'+ items[0]);
+
                   var res = $.ajax({type:"POST", url:"", data: {'dialog': items[0] + ',' + items[1]}, async:false} ).responseText;
                   var res = $.ajax({type:"POST", url:"", data: {'action':items[1], 'object': items[0]}, async:false} ).responseText;
                }
@@ -82,7 +94,8 @@
             });
 
             $("#adddialog").click(function(){
-               var res = $.ajax({type:"POST", url:"", data: {'toto':'tata','dialog': "oh yeah c'est cool!"}, async:false} ).responseText;
+
+               ws.send("DIALOG@oh yeah c'est cool!");
             });
             $("#toggledoor").click(function(){
                var res = $.ajax({type:"POST", url:"", data: {'toggle_door': 'True'}, async:false} ).responseText;
@@ -114,6 +127,7 @@
                   },
                   resultsFormatter: function(item){ return tokenformat(item);},
                   theme: 'facebook'});
+
 
          });
 
@@ -152,4 +166,7 @@
     <br>
 <br>
 (c) GO 2013
+<script>
+</script>
+
 </body></html>
