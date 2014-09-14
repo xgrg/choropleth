@@ -4,8 +4,6 @@ import tornado.websocket
 import threading, os, string, json, time
 from tornado import gen
 
-clients = []
-last_ajax_call = None
 s= ''
 homedir = os.path.dirname(os.path.abspath(__file__))
 modelfp = os.path.join(homedir, 'data', 'model.json')
@@ -20,13 +18,14 @@ rulesfp = os.path.join(homedir, 'data', 'rules.json')
 def get_canvas_cards():
     model = json.load(open(modelfp))
     viewers = [e for e in model if 'viewer' in model[e].get('types',[])]
-    fov = dict( [(i, model[i]['visible']) for i in viewers])
+    fov = dict( [(i, model[i].get('visible',[])) for i in viewers])
     d = {}
     for v in fov:
       for each in fov[v]:
          if 'image' in model[each]:
             d.setdefault(v, []).append('%s.%s'%(each, model[each]['image']))
-    fov = d['player']
+    print d
+    fov = d.get('player', [])
     output1 = ''
     for each in fov:
         k = each.split('.')
@@ -171,23 +170,28 @@ class LongPollingHandler(tornado.web.RequestHandler):
          else:
              time.sleep(0.1)
 
+from sig import Signal
 class TestHandler(tornado.websocket.WebSocketHandler):
+  def initialize(self, engine):
+    self.engine = engine
+    self.engine.clients = []
+    self.sig = Signal()
+    self.sig.connect(engine.get_server_signal)
+
   def open(self, *args):
     print("open", "WebSocketChatHandler")
-    self.last_ajax_call = None
-    self.data = []
-    self.actions = []
-    clients.append(self)
+    self.engine.clients.append(self)
 
   def on_message(self, message):
      print message
      action, params = message.split('@')
      if action == 'DIALOG':
-         self.data.append(params)
          self.write_message(params)
+     elif action == 'ACTION':
+         self.sig(params)
 
   def on_close(self):
-     clients.remove(self)
+     self.engine.clients.remove(self)
 
 if __name__ == '__main__':
     app = tornado.web.Application(handlers = [(r'/', IndexHandler), (r'/poll', LongPollingHandler), (r'/list_tokens', TokenHandler)],

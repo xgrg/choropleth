@@ -4,15 +4,6 @@
 import os, sys, json
 from alftavatn import *
 
-homedir = os.path.dirname(os.path.abspath(__file__))
-modelfile = os.path.join(homedir, 'data', 'model.json')
-rulesfile = os.path.join(homedir, 'data', 'rules.json')
-
-tmpdir = '/tmp'
-dialogsfile = os.path.join(tmpdir, 'data.txt')
-fovfile = os.path.join(tmpdir, 'visible.txt')
-actionsfile = os.path.join(tmpdir, 'actions.txt')
-
 timers = {}
 
 class Model(dict):
@@ -36,7 +27,7 @@ class Model(dict):
 
         # Initializing field-of-views
         viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
-        self.fov = dict( [(i, self[i]['visible']) for i in viewers])
+        self.fov = dict( [(i, self[i].get('visible', [])) for i in viewers])
         self.update_fov = False
 
     def apply_change(self, obj, prop, val, verbose=True):
@@ -165,94 +156,4 @@ class Model(dict):
                    else:
                       raise Exception('Implication should have 2 or 3 items (%s given)'%len(i))
 
-def process_rules ( model, rules, action, app ) :
 
-    model.initialize()
-    prevchanges = False
-
-    if not action is None :
-       #old = open(actionsfile).readlines()
-       old = app.named_handlers['ws'].actions
-       app.named_handlers['ws'].actions = []
-       #f = open(actionsfile, 'w')
-       found = 0
-       for e in old:
-           e2 = e.rstrip('\n').split(',')
-           if e2 == list(action) and found == 0:
-               app.named_handlers['ws'].actions.pop(e)
-           else:
-               found = found + 1
-       print '(%s action %s found and removed from actions file)'%(found, action)
-       f.close()
-
-    while model.changes != 0:
-        model.iterate(rules, action)
-        if model.changes != 0:
-            print '(model has met %s changes during last iteration, going for another round)\n'%model.changes
-            prevchanges = True
-        elif prevchanges:
-            print '(model has met 0 changes during last iteration, exiting loop)\n'
-
-    if model.update_fov:
-       print model.fov
-       d = {}
-       for v in model.fov:
-          for each in model.fov[v]:
-             if 'image' in model[each]:
-                d.setdefault(v, []).append('%s.%s'%(each, model[each]['image']))
-       print d
-       #json.dump(d, open(fovfile, 'w'), indent=2)
-       app.named_handlers['ws'].fov = d
-
-    if model.has_changed:
-       json.dump(model, open(modelfile, 'w'), indent=2)
-
-    for each in model.print_buffer:
-       app.named_handlers['ws'].data.append(each)
-      #os.system('echo "%s" >> %s'%(each, dialogsfile))
-
-from server import IndexHandler, LongPollingHandler, TokenHandler, TestHandler
-import tornado
-from tornado import web
-
-
-if __name__ == '__main__':
-
-
-   app = tornado.web.Application(handlers = [web.url(r'/', IndexHandler),
-                                             web.url(r'/poll', LongPollingHandler),
-                                             web.url(r'/list_tokens', TokenHandler),
-                                             web.url(r'/websocket', TestHandler, name='ws')],
-                                             static_path = homedir, autoescape = None)
-   app.listen(8000)
-   import threading, time
-   # The tornado IO loop doesn't need to be started in the main thread
-   # so let's start it in another thread:
-   t = threading.Thread(target=tornado.ioloop.IOLoop.instance().start)
-   t.daemon = True
-   t.start()
-   print 'yeah'
-   try :
-      os.system('echo "STATE MACHINE STARTED" > %s'%dialogsfile)
-      while(True):
-         #actions = [e.rstrip('\n') for e in open(actionsfile).readlines()]
-         actions = []
-         if hasattr(app.named_handlers['ws'], 'actions'):
-            actions = getattr(app.named_handlers['ws'], 'actions')
-         model = Model(open(modelfile))
-         rules = json.load(open(rulesfile))
-         if len(actions) != 0:
-            for a in actions:
-               obj, act = a.split(',')
-               print ''
-               print '=== Read action', obj, act, ', now provided to the system. ==='
-               print ''
-               process_rules(model, rules, (obj, act), app)
-         else:
-               process_rules(model, rules, None, app)
-
-   except:
-      e = sys.exc_info()
-      s = str(e)
-      os.system('echo "STATE MACHINE STOPPED %s" >> %s'%(s, dialogsfile))
-      raise

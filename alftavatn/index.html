@@ -32,10 +32,10 @@
                if (items.length == 2){
 
                   ws.send("DIALOG@"+items[0] +', '+items[1]);
-                  ws.send('ACTION@'+ items[1]+'@'+ items[0]);
+                  ws.send('ACTION@'+ items[0]+','+ items[1]);
 
-                  var res = $.ajax({type:"POST", url:"", data: {'dialog': items[0] + ',' + items[1]}, async:false} ).responseText;
-                  var res = $.ajax({type:"POST", url:"", data: {'action':items[1], 'object': items[0]}, async:false} ).responseText;
+                  //var res = $.ajax({type:"POST", url:"", data: {'dialog': items[0] + ',' + items[1]}, async:false} ).responseText;
+                  //var res = $.ajax({type:"POST", url:"", data: {'action':items[1], 'object': items[0]}, async:false} ).responseText;
                }
             });
             $("input[type=button]#tokensubmit").keypress(function(event) {
