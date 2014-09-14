@@ -1,55 +1,55 @@
 {
   "player": {
-    "name": "Greg", 
+    "name": "Greg",
+    "types": ["player", "viewer"],
     "geometry": [
       [
         [
-          0, 
+          0,
           0
-        ], 
+        ],
         "#000000"
       ]
-    ], 
-    "location": "iceland", 
-    "activity": "active", 
+    ],
+    "location": "iceland",
+    "activity": "active",
     "position": [
-      10, 
+      10,
       10
-    ], 
-    "types": [
-      "player"
     ]
-  }, 
+  },
   "internal": {
-    "uptime": 1040, 
+    "uptime": 1040,
     "nb_actions": 5
-  }, 
+  },
   "porte": {
+    "image":"door",
     "geometry": [
       [
         [
-          0, 
+          0,
           0
-        ], 
+        ],
         "#000000"
       ]
-    ], 
+    ],
     "position": [
-      5, 
+      5,
       5
-    ], 
+    ],
     "openstate": "open"
-  }, 
+  },
   "avion": {
+    "image": "plane",
     "destination": "home"
-  }, 
-  "maison": {}, 
+  },
+  "maison": {"image":"house"},
   "timer": {
-    "running": "True", 
-    "interval": 0.1, 
+    "running": "True",
+    "interval": 0.1,
     "types": [
       "timer"
-    ], 
+    ],
     "periodic": "True"
   }
 }
