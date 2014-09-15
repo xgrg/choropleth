@@ -3,12 +3,14 @@
 
 import os, sys, json
 from alftavatn import *
+from sig import Signal
 
 timers = {}
 
 class Model(dict):
     def __init__(self, jsonfile):
         self.update(json.load(jsonfile))
+        self.sig = Signal()
 
     def initialize(self):
         self.changes = -1
@@ -29,6 +31,34 @@ class Model(dict):
         viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
         self.fov = dict( [(i, self[i].get('visible', [])) for i in viewers])
         self.update_fov = False
+
+    def get_canvas_cards(self):
+       viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
+       fov = dict( [(i, self[i].get('visible',[])) for i in viewers])
+       d = {}
+       for v in fov:
+         for each in fov[v]:
+            if 'image' in self[each]:
+               d.setdefault(v, []).append('%s.%s'%(each, self[each]['image']))
+       print d
+       fov = d.get('player', [])
+       output1 = ''
+       for each in fov:
+           k = each.split('.')
+           item = '<b>' + k[0] + '</b><br>'
+           item = item + '<img src="static/data/%s.png" /><br>'%k[1]
+           output1 = output1 + '<div class="item"><div class="tweet-wrapper"><span class="text">' + item + '</span></div></div>'
+       return output1
+
+    def get_model_cards(self):
+       output = ''
+       for k, obj in self.items():
+           item = '<b>' + k + '</b><br>'
+           for p in obj:
+               if not p in ['geometry', 'position']:
+                   item = item + ' &nbsp;&nbsp;&nbsp;' + p + ' = ' + str(obj[p]) + '<br>'
+           output = output + '<div class="item"><div class="tweet-wrapper"><span class="text">' + item + '</span></div></div>'
+       return output
 
     def apply_change(self, obj, prop, val, verbose=True):
         self.changes = self.changes + 1
@@ -151,7 +181,8 @@ class Model(dict):
                       (obj, act) = i
                       assert(act.isupper())
                       if i != list(action):
-                         os.system('echo "%s,%s" >> %s'%(obj, act, actionsfile))
+                         #os.system('echo "%s,%s" >> %s'%(obj, act, actionsfile))
+                         self.sig("%s,%s"%(obj, act))
 
                    else:
                       raise Exception('Implication should have 2 or 3 items (%s given)'%len(i))

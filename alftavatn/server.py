@@ -4,115 +4,46 @@ import tornado.websocket
 import threading, os, string, json, time
 from tornado import gen
 
-s= ''
-homedir = os.path.dirname(os.path.abspath(__file__))
-modelfp = os.path.join(homedir, 'data', 'model.json')
-rulesfp = os.path.join(homedir, 'data', 'rules.json')
-
-#datafile = os.path.join('/tmp', 'data.txt')
-#visiblefile = os.path.join('/tmp', 'visible.txt')
-#actionsfp = os.path.join('/tmp', 'actions.txt')
-
-
-
-def get_canvas_cards():
-    model = json.load(open(modelfp))
-    viewers = [e for e in model if 'viewer' in model[e].get('types',[])]
-    fov = dict( [(i, model[i].get('visible',[])) for i in viewers])
-    d = {}
-    for v in fov:
-      for each in fov[v]:
-         if 'image' in model[each]:
-            d.setdefault(v, []).append('%s.%s'%(each, model[each]['image']))
-    print d
-    fov = d.get('player', [])
-    output1 = ''
-    for each in fov:
-        k = each.split('.')
-        item = '<b>' + k[0] + '</b><br>'
-        item = item + '<img src="static/data/%s.png" /><br>'%k[1]
-        output1 = output1 + '<div class="item"><div class="tweet-wrapper"><span class="text">' + item + '</span></div></div>'
-    return output1
-
-def get_model_cards():
-    model = json.load(open(modelfp))
-    output = ''
-    for k, obj in model.items():
-        item = '<b>' + k + '</b><br>'
-        for p in obj:
-            if not p in ['geometry', 'position']:
-                item = item + ' &nbsp;&nbsp;&nbsp;' + p + ' = ' + str(obj[p]) + '<br>'
-        output = output + '<div class="item"><div class="tweet-wrapper"><span class="text">' + item + '</span></div></div>'
-    return output
-
 class IndexHandler(tornado.web.RequestHandler):
+  def initialize(self, engine=None):
+    self.engine = engine
+    self.model = engine.model
+    self.rules = engine.rules
+
   def get(self):
-    print self.settings
-    model = tornado.web.escape.json_encode(json.load(open(modelfp)))
-    rules = json.load(open(rulesfp))
-    rules = ' <br/>'.join([tornado.web.escape.json_encode(e) for e in rules])
-    print model
-    self.render("index.html", model = model, rules = rules, canvas = get_canvas_cards())
+    rules = ' <br/>'.join([tornado.web.escape.json_encode(e) for e in self.rules])
+    self.render("index.html", model = self.model, rules = rules, canvas = self.model.get_canvas_cards())
 
   def post(self):
       print self.request.arguments
-      if 'dialog' in self.request.arguments:
-         dialog = self.get_argument('dialog')
-         os.system('echo "%s" >> %s'%(dialog, datafile))
-      elif 'clean_data' in self.request.arguments:
-         os.system('> %s'%datafile)
-      elif 'toggle_door' in self.request.arguments:
-
-         j = json.load(open(modelfp))
-         if (j['porte']['openstate'] == 'open'):
-           os.system('echo "porte,FERMER" > %s'%actionsfp);
-         elif (j['porte']['openstate'] == 'close'):
-             os.system('echo "porte,OUVRIR" > %s'%actionsfp);
-      elif 'send_action' in self.request.arguments:
+      if 'send_action' in self.request.arguments:
           obj = self.get_argument('object')
           act = self.get_argument('action')
-          #os.system('echo "%s,%s" >> %s'%(obj, act, actionsfp))
-          self.actions.append("%s,%s"%(obj, act))
+          self.engine.actions.put("%s,%s"%(obj, act))
       elif 'get_objects' in self.request.arguments:
            from alftavatn import get_objects
-
-           rules = None
-           model = None
-
-           while (rules is None or model is None):
-              try:
-                 rules = json.load(open(rulesfp))
-                 model = json.load(open(modelfp))
-              except:
-                 pass
-           objects = get_objects(model, rules)
+           objects = get_objects(self.model, self.rules)
            self.write(','.join(objects))
-
       elif 'get_actions' in self.request.arguments:
            from alftavatn import get_actions
            obj = self.get_argument('object')
-
-           rules = None
-           model = None
-
-           while (rules is None or model is None):
-              try:
-                 rules = json.load(open(rulesfp))
-                 model = json.load(open(modelfp))
-              except:
-                 pass
-           actions = get_actions(obj, model, rules)
+           actions = get_actions(obj, self.model, self.rules)
            self.write(','.join(actions))
       elif 'fov' in self.request.arguments:
-          self.write(get_canvas_cards())
+          self.write(self.model.get_canvas_cards())
       elif 'refreshmodel' in self.request.arguments:
-          self.write(get_model_cards())
+          self.write(self.model.get_model_cards())
 
 
 class TokenHandler(tornado.web.RequestHandler):
+    def initialize(self, engine=None):
+        self.engine = engine
+        self.model = engine.model
+        self.rules = engine.rules
+
     def get(self):
         if 'q' in self.request.arguments:
-            model = json.load(open(modelfp))
+            model = self.model
             q = string.replace(self.get_argument('q'),' ', '')
             i = 1
             keys = model.keys()
@@ -122,7 +53,7 @@ class TokenHandler(tornado.web.RequestHandler):
             arr = []
             for v in keys_starting_with_q:
                p = {"id" : i, "name" : v, "type" : "object"}
-               p["image"] = 'static/data' + model[v]["image"] + '.png' if "image" in model[v] else ""
+               p["image"] = 'static/data/' + model[v]["image"] + '.png' if "image" in model[v] else ""
                arr.append(p)
                i = i + 1
 
@@ -131,8 +62,8 @@ class TokenHandler(tornado.web.RequestHandler):
         elif 'qa' in self.request.arguments:
             obj = self.get_argument('object')
             print obj
-            model = json.load(open(modelfp))
-            rules = json.load(open(rulesfp))
+            model = self.model #json.load(open(modelfp))
+            rules = self.rules #json.load(open(rulesfp))
             q = string.replace(self.get_argument('qa'),' ', '')
             arr = []
 
@@ -189,6 +120,12 @@ class TestHandler(tornado.websocket.WebSocketHandler):
          self.write_message(params)
      elif action == 'ACTION':
          self.sig(params)
+     elif action == 'TOGGLEDOOR':
+         j = self.engine.model
+         if (j['porte']['openstate'] == 'open'):
+           self.sig("porte,FERMER")
+         elif (j['porte']['openstate'] == 'close'):
+           self.sig("porte,OUVRIR")
 
   def on_close(self):
      self.engine.clients.remove(self)

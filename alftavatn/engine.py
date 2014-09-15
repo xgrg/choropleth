@@ -8,9 +8,9 @@ import state_machine as sm
 
 class TornadoServer(web.Application):
    def __init__(self, start=True, engine=None):
-      web.Application.__init__(self, handlers = [web.url(r'/', IndexHandler),
+      web.Application.__init__(self, handlers = [web.url(r'/', IndexHandler, kwargs={'engine':engine}),
                                              web.url(r'/poll', LongPollingHandler),
-                                             web.url(r'/list_tokens', TokenHandler),
+                                             web.url(r'/list_tokens', TokenHandler, kwargs={'engine':engine}),
                                              web.url(r'/websocket', TestHandler, name='ws', kwargs={'engine':engine})],
                                              static_path = os.path.dirname(os.path.abspath(__file__)),
                                              autoescape = None)
@@ -93,6 +93,7 @@ if __name__ == '__main__':
    e.load_model('/tmp/model.json')
    e.load_rules('/tmp/rules.json')
    e.start_tornado()
+   e.model.sig.connect(e.get_server_signal)
 
    while(True):
       if not e.actions.empty():

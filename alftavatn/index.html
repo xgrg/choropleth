@@ -9,7 +9,6 @@
 
       <script type="text/javascript" src="{{ static_url("js/jquery.min.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/jquery.tokeninput.js") }}"></script>
-      <script type="text/javascript" src="{{ static_url("js/client.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/jquery.gridalicious.min.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/clickitem.js") }}"></script>
       <script type="text/javascript">
@@ -30,12 +29,8 @@
                items = items.split(',');
                console.log(items);
                if (items.length == 2){
-
                   ws.send("DIALOG@"+items[0] +', '+items[1]);
                   ws.send('ACTION@'+ items[0]+','+ items[1]);
-
-                  //var res = $.ajax({type:"POST", url:"", data: {'dialog': items[0] + ',' + items[1]}, async:false} ).responseText;
-                  //var res = $.ajax({type:"POST", url:"", data: {'action':items[1], 'object': items[0]}, async:false} ).responseText;
                }
             });
             $("input[type=button]#tokensubmit").keypress(function(event) {
@@ -50,6 +45,7 @@
             });
 
             $('#refreshmodel').click(function(){
+
                var res = $.ajax({type:"POST", url:"", data: {'refreshmodel': 'True'}, async:false} ).responseText;
                console.log(res);
                $("#jstwitter").html(res);
@@ -94,19 +90,16 @@
             });
 
             $("#adddialog").click(function(){
-
                ws.send("DIALOG@oh yeah c'est cool!");
             });
             $("#toggledoor").click(function(){
-               var res = $.ajax({type:"POST", url:"", data: {'toggle_door': 'True'}, async:false} ).responseText;
+               ws.send('TOGGLEDOOR@');
             });
             $("#cleandata").click(function(){
-               var res = $.ajax({type:"POST", url:"", data: {'clean_data': 'True'}, async:false} ).responseText;
+               $("#response").html('');
             });
 
-
             $("#rules").html('{{rules}}');
-
             $("#refreshmodel").click();
             $("#refreshcanvas").click();
 
