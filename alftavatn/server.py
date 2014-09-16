@@ -19,7 +19,7 @@ class IndexHandler(tornado.web.RequestHandler):
       if 'send_action' in self.request.arguments:
           obj = self.get_argument('object')
           act = self.get_argument('action')
-          self.engine.actions.put("%s,%s"%(obj, act))
+          self.engine.model.action_added("%s,%s"%(obj, act))
       elif 'get_objects' in self.request.arguments:
            from alftavatn import get_objects
            objects = get_objects(self.model, self.rules)
@@ -62,8 +62,8 @@ class TokenHandler(tornado.web.RequestHandler):
         elif 'qa' in self.request.arguments:
             obj = self.get_argument('object')
             print obj
-            model = self.model #json.load(open(modelfp))
-            rules = self.rules #json.load(open(rulesfp))
+            model = self.model
+            rules = self.rules
             q = string.replace(self.get_argument('qa'),' ', '')
             arr = []
 
@@ -105,13 +105,12 @@ from sig import Signal
 class TestHandler(tornado.websocket.WebSocketHandler):
   def initialize(self, engine):
     self.engine = engine
-    self.engine.clients = []
-    self.sig = Signal()
-    self.sig.connect(engine.get_server_signal)
+    self.clients = []
+    self.engine.print_buffer.connect(self.write)
 
   def open(self, *args):
     print("open", "WebSocketChatHandler")
-    self.engine.clients.append(self)
+    self.clients.append(self)
 
   def on_message(self, message):
      print message
@@ -119,16 +118,20 @@ class TestHandler(tornado.websocket.WebSocketHandler):
      if action == 'DIALOG':
          self.write_message(params)
      elif action == 'ACTION':
-         self.sig(params)
+         self.engine.model.action_added(params)
      elif action == 'TOGGLEDOOR':
          j = self.engine.model
          if (j['porte']['openstate'] == 'open'):
-           self.sig("porte,FERMER")
+           self.engine.model.action_added("porte,FERMER")
          elif (j['porte']['openstate'] == 'close'):
-           self.sig("porte,OUVRIR")
+           self.engine.model.action_added("porte,OUVRIR")
 
   def on_close(self):
-     self.engine.clients.remove(self)
+     self.clients.remove(self)
+
+  def write(self, data):
+      for each in self.clients:
+          self.write_message(data)
 
 if __name__ == '__main__':
     app = tornado.web.Application(handlers = [(r'/', IndexHandler), (r'/poll', LongPollingHandler), (r'/list_tokens', TokenHandler)],

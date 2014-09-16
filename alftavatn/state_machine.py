@@ -10,7 +10,7 @@ timers = {}
 class Model(dict):
     def __init__(self, jsonfile):
         self.update(json.load(jsonfile))
-        self.sig = Signal()
+        self.action_added = Signal()
 
     def initialize(self):
         self.changes = -1
@@ -71,11 +71,13 @@ class Model(dict):
 
         def tick(obj, model):
            print '*** Thread just ended for object', model[obj], 'with timer', timers[obj]
-           os.system('echo "%s,%s" >> %s'%(obj, "TICK", actionsfile))
+           self.action_added('%s,TICK'%obj)
+           #os.system('echo "%s,%s" >> %s'%(obj, "TICK", actionsfile))
            if model[obj]['periodic'] == 'False':
                print '   this is not a periodic one, sending STOP action and popping out timer', timers[obj]
                assert(model[obj]['running'] == 'True')
-               os.system('echo "%s,STOP" >> %s'%(obj, actionsfile))
+               self.action_added('%s,STOP'%obj)
+               #os.system('echo "%s,STOP" >> %s'%(obj, actionsfile))
                timers.pop(obj)
 
 
@@ -182,7 +184,7 @@ class Model(dict):
                       assert(act.isupper())
                       if i != list(action):
                          #os.system('echo "%s,%s" >> %s'%(obj, act, actionsfile))
-                         self.sig("%s,%s"%(obj, act))
+                         self.action_added("%s,%s"%(obj, act))
 
                    else:
                       raise Exception('Implication should have 2 or 3 items (%s given)'%len(i))

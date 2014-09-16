@@ -7,43 +7,50 @@ import state_machine as sm
 
 
 class TornadoServer(web.Application):
-   def __init__(self, start=True, engine=None):
-      web.Application.__init__(self, handlers = [web.url(r'/', IndexHandler, kwargs={'engine':engine}),
-                                             web.url(r'/poll', LongPollingHandler),
-                                             web.url(r'/list_tokens', TokenHandler, kwargs={'engine':engine}),
-                                             web.url(r'/websocket', TestHandler, name='ws', kwargs={'engine':engine})],
-                                             static_path = os.path.dirname(os.path.abspath(__file__)),
-                                             autoescape = None)
-      if start:
-         self.start_thread()
+   def __init__(self, engine=None):
+      self.engine = Engine()
 
    def start_thread(self):
+      web.Application.__init__(self, handlers = [web.url(r'/', IndexHandler, kwargs={'engine':self.engine}),
+#                                             web.url(r'/poll', LongPollingHandler),
+                                             web.url(r'/list_tokens', TokenHandler, kwargs={'engine':self.engine}),
+                                             web.url(r'/websocket', TestHandler, name='ws', kwargs={'engine':self.engine})],
+                                             static_path = os.path.dirname(os.path.abspath(__file__)),
+                                             autoescape = None)
       self.listen(8000)
-      import threading, time
+      #import threading, time
       # The tornado IO loop doesn't need to be started in the main thread
       # so let's start it in another thread:
-      self.thread = threading.Thread(target=ioloop.IOLoop.instance().start)
-      self.thread.daemon = True
-      self.thread.start()
+      #self.thread = threading.Thread(target=ioloop.IOLoop.instance().start)
+      #self.thread.daemon = True
+      #self.thread.start()
+      ioloop.IOLoop.instance().start()
 
 
 class Engine():
    def __init__(self):
       from Queue import Queue
       self.actions = Queue()
+      from sig import Signal
+      self.print_buffer = Signal()
 
    def load_model(self, fp):
       self.model = sm.Model(open(fp))
+      self.model.action_added.connect(self.add_action)
 
    def load_rules(self, fp):
       import json
       self.rules = json.load(open(fp))
 
-   def start_tornado(self):
-      self.server = TornadoServer(start=True, engine=self)
+   def add_action(self, action):
+      self.actions.put(action)
+      self.update_model()
 
-   def get_server_signal(self, data):
-      self.actions.put(data)
+   def update_model(self):
+      item = self.actions.get()
+      print 'ACTION', item
+      obj, act = item.split(',')
+      self.apply_rules((obj, act))
 
    def apply_rules (self, action = None) :
 
@@ -66,9 +73,7 @@ class Engine():
                    d.setdefault(v, []).append('%s.%s'%(each, self.model[each]['image']))
 
        for each in self.model.print_buffer:
-         for client in self.clients:
-            client.write_message(each)
-
+           self.print_buffer(str(each))
 
 def create_files():
    ''' A simple function that makes the files needed for running everything.
@@ -83,23 +88,12 @@ def create_files():
       if not os.path.exists(fp):
          os.system('cp %s %s'%(source, fp))
 
-
 if __name__ == '__main__':
    # Make files (model, rules) ready for execution
    create_files()
 
    # Where everything begins
-   e = Engine()
-   e.load_model('/tmp/model.json')
-   e.load_rules('/tmp/rules.json')
-   e.start_tornado()
-   e.model.sig.connect(e.get_server_signal)
-
-   while(True):
-      if not e.actions.empty():
-         item = e.actions.get()
-         print 'ACTION', item
-         obj, act = item.split(',')
-         e.apply_rules((obj, act))
-      else:
-         e.apply_rules()
+   server = TornadoServer()
+   server.engine.load_model('/tmp/model.json')
+   server.engine.load_rules('/tmp/rules.json')
+   server.start_thread()
