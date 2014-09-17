@@ -11,5 +11,7 @@
   [[["ANY player", "location", "iceland"], ["timer", "CHECK_ICELAND"]], [["SYSTEM", "PRINT", "Yes !"]]],
   [[["player", "location", "street"]], [["player", "visible", ["avion", "maison"]]]],
   [[["player", "location", "home"]], [["player", "visible", ["porte"]]]],
-  [[["player", "location", "iceland"]], [["player", "visible", ["iceland"]]]]
+  [[["player", "location", "iceland"]], [["player", "visible", ["iceland"]]]],
+  [[["avion", "CLICK"]], [["avion", "PRENDRE"]]],
+  [[["porte", "CLICK"], ["porte", "openstate", "open"]], [["porte", "SORTIR"]]]
 ]

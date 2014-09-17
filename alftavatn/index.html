@@ -93,7 +93,8 @@
                         }
                   });
                   $("div.item").click(function(){
-                     console.log($(this).find('b').text());
+                     var obj = $(this).find('b').text();
+                     ws.send("ACTION@" + obj + ",CLICK");
                   });
                }
             });
