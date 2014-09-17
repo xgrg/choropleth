@@ -5,7 +5,6 @@ import os, sys, json
 from alftavatn import *
 from sig import Signal
 
-timers = {}
 
 class ChangeSignal(Signal):
     def __call__(self, data):
@@ -17,6 +16,7 @@ class FovSignal(Signal):
 
 class Model(dict):
     def __init__(self, jsonfile):
+        self.timers = {}
         self.update(json.load(jsonfile))
         self.action_added = Signal()
         self.model_changed = ChangeSignal()
@@ -29,14 +29,6 @@ class Model(dict):
         self.iter_nb = 0
         self.processed_rules = {}
         self.print_buffer = []
-
-#        # Stopping timers
-#        for timer in [e for e in self if 'timer' in self[e].get('types', [])]:
-#            if self[timer]['running'] == 'True':
-#                self.apply_change(timer, 'running', 'False')
-#        if self.changes != -1:
-#            print 'stopped %s timers'%(self.changes + 1)
-#            self.changes = -1
 
         # Initializing field-of-views
         if not hasattr(self, 'fov'):
@@ -53,7 +45,6 @@ class Model(dict):
          for each in fov[v]:
             if 'image' in self[each]:
                d.setdefault(v, []).append('%s.%s'%(each, self[each]['image']))
-       print d
        fov = d.get('player', [])
        output1 = ''
        for each in fov:
@@ -84,15 +75,17 @@ class Model(dict):
     def iterate(self, rules, action):
 
         def tick(obj, model):
-           print '*** Thread just ended for object', model[obj], 'with timer', timers[obj]
+           print '*** Thread just ended for object', model[obj], 'with timer', self.timers[obj]
+           print self.timers[obj][0].is_alive()
+           self.timers[obj][1] = False
            self.action_added('%s,TICK'%obj)
            #os.system('echo "%s,%s" >> %s'%(obj, "TICK", actionsfile))
            if model[obj]['periodic'] == 'False':
-               print '   this is not a periodic one, sending STOP action and popping out timer', timers[obj]
+               print '   this is not a periodic one, sending STOP action and popping out timer', self.timers[obj]
                assert(model[obj]['running'] == 'True')
+               self.timers.pop(obj)
                self.action_added('%s,STOP'%obj)
                #os.system('echo "%s,STOP" >> %s'%(obj, actionsfile))
-               timers.pop(obj)
 
 
         self.iter_nb = self.iter_nb + 1
@@ -146,12 +139,13 @@ class Model(dict):
 
                        if (action[1] == 'TICK' and self[action[0]]['running'] == 'True' and self[action[0]]['periodic'] == 'True') or action[1] == 'START':
                            import threading
-                           if (action[1] == 'START' and not action[0] in timers) or (action[1] == 'TICK' and not timers[action[0]].is_alive()):
+                           if (action[1] == 'START' and not action[0] in self.timers) or (action[1] == 'TICK' and not self.timers[action[0]][1]):
                                print "  Running a thread (either START or periodic TICK) with action", action
-                               timers[action[0]] = threading.Timer(self[action[0]]['interval'], tick, args=[action[0], self])
-                               timers[action[0]].start()
-                               print '     timers are', timers
+                               self.timers[action[0]] = [threading.Timer(self[action[0]]['interval'], tick, args=[action[0], self]), True]
+                               self.timers[action[0]][0].start()
+                               print '     timers are', self.timers
                            else:
+                               print "is alive", self.timers[action[0]][1]
                                print '     not running another thread for action', action
                                # second pass due to has_changed = True -> ignore it
                                pass
@@ -159,11 +153,11 @@ class Model(dict):
                        elif action[1] == 'STOP':
                            if self[action[0]]['running'] == 'True' :
                                self.apply_change(action[0], 'running', 'False')
-                           if action[0] in timers:
-                               timers[action[0]].cancel()
-                               timers.pop(action[0])
+                           if action[0] in self.timers:
+                               self.timers[action[0]][0].cancel()
+                               self.timers.pop(action[0])
                            else:
-                               print '(timer', action[0], 'not found in', timers, ')'
+                               print '(timer', action[0], 'not found in', self.timers, ')'
 
 
 
@@ -188,7 +182,6 @@ class Model(dict):
 
                          if self[obj][prop] != val :
                              self.apply_change(obj, prop, val)
-                             print "totobis", self[obj].get('types', []), obj
                              if 'viewer' in self[obj].get('types', []) and prop == 'visible':
                                 self.fov.update({obj : self[obj]['visible']})
                                 self.fov_changed(json.dumps(self.fov))

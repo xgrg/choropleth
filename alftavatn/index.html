@@ -60,7 +60,6 @@
             $('#refreshmodel').click(function(){
 
                var res = $.ajax({type:"POST", url:"", data: {'refreshmodel': 'True'}, async:false} ).responseText;
-               console.log(res);
                $("#jstwitter").html(res);
                $("#jstwitter").gridalicious({
                   gutter: 13,
@@ -68,8 +67,8 @@
                      animate: true,
                      animationOptions: {
                         queue : true,
-                        speed: 500,
-                        duration: 500
+                        speed: 100,
+                        duration: 100
                      }
                });
             });

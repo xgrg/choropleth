@@ -42,10 +42,11 @@ class Engine():
       self.update_model()
 
    def update_model(self):
-      item = self.actions.get()
-      print 'ACTION', item
-      obj, act = item.split(',')
-      self.apply_rules((obj, act))
+      while not self.actions.empty():
+         item = self.actions.get()
+         print 'ACTION', item
+         obj, act = item.split(',')
+         self.apply_rules((obj, act))
 
    def apply_rules (self, action = None) :
 
@@ -59,13 +60,6 @@ class Engine():
                prevchanges = True
            elif prevchanges:
                print '(model has met 0 changes during last iteration, exiting loop)\n'
-
-#       if self.model.update_fov:
-#          d = {}
-#          for v in self.model.fov:
-#             for each in self.model.fov[v]:
-#                if 'image' in self.model[each]:
-#                   d.setdefault(v, []).append('%s.%s'%(each, self.model[each]['image']))
 
        for each in self.model.print_buffer:
            self.print_buffer(str(each))
