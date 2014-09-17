@@ -2,6 +2,7 @@
   "player": {
     "name": "Greg",
     "types": ["player", "viewer"],
+    "visible": [],
     "geometry": [
       [
         [
@@ -44,6 +45,7 @@
     "destination": "home"
   },
   "maison": {"image":"house"},
+  "iceland": {"image":"iceland"},
   "timer": {
     "running": "True",
     "interval": 0.1,

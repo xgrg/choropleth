@@ -177,6 +177,9 @@
   [[["timer","CHECK_ICELAND"]],[["timer","CHECK_ICELAND"]]],
   [[["timer","TICK"]],[["internal", "uptime", "@ADD(internal.uptime, 1)"]]],
   [[["timer","PRINT_UPTIME"]],[["SYSTEM", "PRINT", "@VALUE(internal.uptime)"]]],
-  [[["ANY player", "location", "iceland"], ["timer", "CHECK_ICELAND"]],[["SYSTEM", "PRINT", "Yes !"]]]
+  [[["ANY player", "location", "iceland"], ["timer", "CHECK_ICELAND"]],[["SYSTEM", "PRINT", "Yes !"]]],
+  [[["player", "location", "street"]], [["player", "visible", ["avion", "maison"]]]],
+  [[["player", "location", "home"]], [["player", "visible", ["porte"]]]],
+  [[["player", "location", "iceland"]], [["player", "visible", ["iceland"]]]]
 
 ]
