@@ -44,6 +44,7 @@
                if (items.length == 2){
                   ws.send("DIALOG@"+items[0] +', '+items[1]);
                   ws.send('ACTION@'+ items[0]+','+ items[1]);
+                  $("#demo-input").tokenInput("clear");
                }
             });
             $("input[type=button]#tokensubmit").keypress(function(event) {
@@ -91,6 +92,9 @@
                            duration: 500
                         }
                   });
+                  $("div.item").click(function(){
+                     console.log($(this).find('b').text());
+                  });
                }
             });
 
@@ -115,6 +119,7 @@
             $("#fov").html(res);
             $("#refreshmodel").click();
             $("#refreshcanvas").click();
+
 
             $("#demo-input").tokenInput("list_tokens", {
                   tokenValue : 'name',
