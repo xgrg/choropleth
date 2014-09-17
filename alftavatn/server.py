@@ -30,6 +30,8 @@ class IndexHandler(tornado.web.RequestHandler):
            actions = get_actions(obj, self.model, self.rules)
            self.write(','.join(actions))
       elif 'fov' in self.request.arguments:
+          self.write(json.dumps(self.model.fov))
+      elif 'refreshcanvas' in self.request.arguments:
           self.write(self.model.get_canvas_cards())
       elif 'refreshmodel' in self.request.arguments:
           self.write(self.model.get_model_cards())
@@ -101,12 +103,13 @@ class LongPollingHandler(tornado.web.RequestHandler):
          else:
              time.sleep(0.1)
 
-from sig import Signal
 class TestHandler(tornado.websocket.WebSocketHandler):
   def initialize(self, engine):
     self.engine = engine
     self.clients = []
     self.engine.print_buffer.connect(self.write)
+    self.engine.model.model_changed.connect(self.write)
+    self.engine.model.fov_changed.connect(self.write)
 
   def open(self, *args):
     print("open", "WebSocketChatHandler")
@@ -116,7 +119,11 @@ class TestHandler(tornado.websocket.WebSocketHandler):
      print message
      action, params = message.split('@')
      if action == 'DIALOG':
-         self.write_message(params)
+         # This Dialog action can only be fired from a client,
+         # not by the state machine, this is why the response
+         # is sent only to self (and not to every client as in
+         # write(self, data)
+         self.write_message('dialog@' + params)
      elif action == 'ACTION':
          self.engine.model.action_added(params)
      elif action == 'TOGGLEDOOR':

@@ -1,7 +1,9 @@
 
 from tornado import web, ioloop, websocket
 from server import IndexHandler, LongPollingHandler, TokenHandler, TestHandler
-import os
+import os, json
+from Queue import Queue
+from sig import Signal
 
 import state_machine as sm
 
@@ -12,34 +14,27 @@ class TornadoServer(web.Application):
 
    def start_thread(self):
       web.Application.__init__(self, handlers = [web.url(r'/', IndexHandler, kwargs={'engine':self.engine}),
-#                                             web.url(r'/poll', LongPollingHandler),
                                              web.url(r'/list_tokens', TokenHandler, kwargs={'engine':self.engine}),
                                              web.url(r'/websocket', TestHandler, name='ws', kwargs={'engine':self.engine})],
                                              static_path = os.path.dirname(os.path.abspath(__file__)),
                                              autoescape = None)
       self.listen(8000)
-      #import threading, time
-      # The tornado IO loop doesn't need to be started in the main thread
-      # so let's start it in another thread:
-      #self.thread = threading.Thread(target=ioloop.IOLoop.instance().start)
-      #self.thread.daemon = True
-      #self.thread.start()
       ioloop.IOLoop.instance().start()
 
+class DialogSignal(Signal):
+   def __call__(self, data=''):
+      Signal.__call__(self, 'dialog@' + data)
 
 class Engine():
    def __init__(self):
-      from Queue import Queue
       self.actions = Queue()
-      from sig import Signal
-      self.print_buffer = Signal()
+      self.print_buffer = DialogSignal()
 
    def load_model(self, fp):
       self.model = sm.Model(open(fp))
       self.model.action_added.connect(self.add_action)
 
    def load_rules(self, fp):
-      import json
       self.rules = json.load(open(fp))
 
    def add_action(self, action):
@@ -65,12 +60,12 @@ class Engine():
            elif prevchanges:
                print '(model has met 0 changes during last iteration, exiting loop)\n'
 
-       if self.model.update_fov:
-          d = {}
-          for v in self.model.fov:
-             for each in self.model.fov[v]:
-                if 'image' in self.model[each]:
-                   d.setdefault(v, []).append('%s.%s'%(each, self.model[each]['image']))
+#       if self.model.update_fov:
+#          d = {}
+#          for v in self.model.fov:
+#             for each in self.model.fov[v]:
+#                if 'image' in self.model[each]:
+#                   d.setdefault(v, []).append('%s.%s'%(each, self.model[each]['image']))
 
        for each in self.model.print_buffer:
            self.print_buffer(str(each))
@@ -96,4 +91,5 @@ if __name__ == '__main__':
    server = TornadoServer()
    server.engine.load_model('/tmp/model.json')
    server.engine.load_rules('/tmp/rules.json')
+   server.engine.apply_rules()
    server.start_thread()

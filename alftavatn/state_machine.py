@@ -7,10 +7,21 @@ from sig import Signal
 
 timers = {}
 
+class ChangeSignal(Signal):
+    def __call__(self, data):
+       Signal.__call__(self, 'change@' + data)
+
+class FovSignal(Signal):
+    def __call__(self, data):
+       Signal.__call__(self, 'fov@' + data)
+
 class Model(dict):
     def __init__(self, jsonfile):
         self.update(json.load(jsonfile))
         self.action_added = Signal()
+        self.model_changed = ChangeSignal()
+        self.fov_changed = FovSignal()
+        self.initialize()
 
     def initialize(self):
         self.changes = -1
@@ -28,9 +39,11 @@ class Model(dict):
 #            self.changes = -1
 
         # Initializing field-of-views
-        viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
-        self.fov = dict( [(i, self[i].get('visible', [])) for i in viewers])
-        self.update_fov = False
+        if not hasattr(self, 'fov'):
+           viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
+           self.fov = dict( [(i, self[i].get('visible', [])) for i in viewers])
+           self.fov_changed(json.dumps(self.fov))
+           print 'fov_changed', self.fov
 
     def get_canvas_cards(self):
        viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
@@ -66,6 +79,7 @@ class Model(dict):
             print '    => apply change to %s.%s'%(obj, prop), '(', self[obj][prop], '->', val, ')'
         self[obj][prop] = val
         self.has_changed = True
+        self.model_changed(json.dumps(self))
 
     def iterate(self, rules, action):
 
@@ -174,16 +188,17 @@ class Model(dict):
 
                          if self[obj][prop] != val :
                              self.apply_change(obj, prop, val)
-                             print self[obj].get('types', []), obj
+                             print "totobis", self[obj].get('types', []), obj
                              if 'viewer' in self[obj].get('types', []) and prop == 'visible':
                                 self.fov.update({obj : self[obj]['visible']})
-                                self.update_fov = True
+                                self.fov_changed(json.dumps(self.fov))
+                                print 'FOV CHANGED', self.fov
+                                #self.update_fov = True
 
                    elif len(i) == 2:
                       (obj, act) = i
                       assert(act.isupper())
                       if i != list(action):
-                         #os.system('echo "%s,%s" >> %s'%(obj, act, actionsfile))
                          self.action_added("%s,%s"%(obj, act))
 
                    else:
