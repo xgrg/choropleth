@@ -29,24 +29,58 @@ class Engine():
    def __init__(self):
       self.actions = Queue()
       self.print_buffer = DialogSignal()
+      self.is_running = False
+      self.pending_prints = set()
 
    def load_model(self, fp):
       self.model = sm.Model(open(fp))
       self.model.action_added.connect(self.add_action)
+      self.model.pending_print.connect(self.add_pending_print)
 
    def load_rules(self, fp):
       self.rules = json.load(open(fp))
 
    def add_action(self, action):
       self.actions.put(action)
-      self.update_model()
+      if not self.is_running:
+         self.update_model()
 
-   def update_model(self):
+   def add_pending_print(self, data):
+      self.pending_prints.add(data)
+
+   def update_model(self, verbose=True):
+      self.is_running = True
       while not self.actions.empty():
          item = self.actions.get()
-         print 'ACTION', item
+         if verbose:
+            print 'Firing action', item
          obj, act = item.split(',')
          self.apply_rules((obj, act))
+         self.apply_changes()
+         self.apply_prints()
+      self.is_running = False
+
+   def apply_prints(self):
+      while self.pending_prints:
+         item = self.pending_prints.pop()
+         self.print_buffer(str(item))
+
+   def apply_changes(self, verbose=True):
+      changes = 0
+      if verbose:
+         print '(applying following changes :', self.model.pending_changes,')'
+      for obj, v in self.model.pending_changes.items():
+         for prop, val in v.items():
+            self.model.apply_change(obj, prop, val)
+            changes = changes + 1
+            if 'viewer' in self.model[obj].get('types', []) and prop == 'visible':
+              self.model.fov.update({obj : self.model[obj].get_property('visible')})
+              self.model.fov_changed(json.dumps(self.model.fov))
+              if verbose:
+                 print 'FOV CHANGED', self.model.fov
+      if verbose:
+         print '%s changes'%changes
+
 
    def apply_rules (self, action = None) :
 
@@ -55,14 +89,12 @@ class Engine():
 
        while self.model.changes != 0:
            self.model.iterate(self.rules, action)
+
            if self.model.changes != 0:
                print '(model has met %s changes during last iteration, going for another round)\n'%self.model.changes
                prevchanges = True
            elif prevchanges:
                print '(model has met 0 changes during last iteration, exiting loop)\n'
-
-       for each in self.model.print_buffer:
-           self.print_buffer(str(each))
 
 def create_files():
    ''' A simple function that makes the files needed for running everything.
