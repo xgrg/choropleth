@@ -74,7 +74,13 @@ class Engine():
             self.model.apply_change(obj, prop, val)
             changes = changes + 1
             if 'viewer' in self.model[obj].get('types', []) and prop == 'visible':
-              self.model.fov.update({obj : self.model[obj].get_property('visible')})
+              item = {}
+              for each in self.model[obj].get_property('visible'):
+                 print each, self.model[each]
+                 image = self.model[each].get_property('image')
+                 pos =  self.model[each].get_property('position')
+                 item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'w': pos[2], 'h': pos[3]}
+              self.model.fov[obj] = item
               self.model.fov_changed(json.dumps(self.model.fov))
               if verbose:
                  print 'FOV CHANGED', self.model.fov

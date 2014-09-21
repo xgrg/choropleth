@@ -194,7 +194,6 @@ class Model(dict):
                        if action[1] == 'START' :
                          if self[action[0]].get_property('running') == 'False' :
                             self.add_pending_change(action[0], 'running', 'True')
-                            #self.apply_change(action[0], 'running', 'True')
 
                        if (action[1] == 'TICK' and self[action[0]].get_property('running') == 'True' \
                              and self[action[0]].get_property('periodic') == 'True') or action[1] == 'START':
@@ -213,7 +212,6 @@ class Model(dict):
                        elif action[1] == 'STOP':
                            if self[action[0]]['running'] == 'True' :
                                self.add_pending_change(action[0], 'running', 'False')
-                               #self.apply_change(action[0], 'running', 'False')
                            if action[0] in self.timers:
                                self.timers[action[0]][0].cancel()
                                self.timers.pop(action[0])
@@ -243,7 +241,6 @@ class Model(dict):
 
                          if self[obj].get_property(prop) != val :
                              self.add_pending_change(obj, prop, val)
-                             #self.apply_change(obj, prop, val)
 
                    elif len(i) == 2:
                       (obj, act) = i

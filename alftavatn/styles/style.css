@@ -167,3 +167,11 @@
            font-style: italic;
            color: #666666;
        }
+
+       canvas#viewport { border: 1px solid white;
+             image-rendering: optimizeQuality;
+             image-rendering: -moz-crisp-edges;
+             image-rendering: -webkit-optimize-contrast;
+             image-rendering: optimize-contrast;
+             -ms-interpolation-mode: nearest-neighbor;
+      }

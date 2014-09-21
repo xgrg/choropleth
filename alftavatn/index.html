@@ -15,6 +15,18 @@
 
 
          $(document).ready(function(){
+            function make_base(images, image, x, y, w, h, canvas, context)
+            {
+                 images[image] = new Image();
+                 console.log(image);
+                 var res = $.ajax({type:"POST", url:"", data: {'get_image_path': image}, async:false} ).responseText;
+                 console.log(res);
+                 images[image].src = res;
+                   images[image].onload = function(){
+                     context.drawImage(images[image], x, y, w, h);
+                   }
+            }
+
             var ws = new WebSocket("ws://localhost:8000/websocket");
 
             ws.onopen = function() {
@@ -79,7 +91,7 @@
                   if (!("player" in JSON.parse($("#fov").html()))) {
                      return '';
                   }
-                  var j = JSON.parse($("#fov").html())['player'].toString();
+                  //var j = JSON.parse($("#fov").html())['player'].toString();
                   var res = $.ajax({type:"POST", url:"", data: {'refreshcanvas': 'True'}, async:false} ).responseText;
                   $("#canvas").html(res);
                   $("#canvas").gridalicious({
@@ -96,6 +108,26 @@
                      var obj = $(this).find('b').text();
                      ws.send("ACTION@" + obj + ",CLICK");
                   });
+                  var fov = JSON.parse($("#fov").html())['player'];
+                  var canvas = document.getElementById('viewport'),
+                      context = canvas.getContext('2d');
+                  var images = {};
+                  context.imageSmoothingEnabled = false;
+                  context.webkitImageSmoothingEnabled = false;
+                  context.mozImageSmoothingEnabled = false;
+                  context.clearRect(0, 0, canvas.width, canvas.height);
+                  for (var obj in fov) {
+                      if (fov.hasOwnProperty(obj)) {
+                          var im = fov[obj]['image'];
+                          var x = fov[obj]['x'];
+                          var y = fov[obj]['y'];
+                          var w = fov[obj]['w'];
+                          var h = fov[obj]['h'];
+
+                          make_base(images, im, x, y, w, h, canvas, context);
+                      }
+                  }
+
                }
             });
 
@@ -150,6 +182,7 @@
    <body>
       <h2>Alftavatn</h2>
       <div id="canvas"></div>
+      <canvas id="viewport" width=900 height=300></canvas>
       <span id="refreshcanvas"> refresh</span>
 
       <div id="fov"></div><br>

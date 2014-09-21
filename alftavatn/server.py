@@ -35,6 +35,9 @@ class IndexHandler(tornado.web.RequestHandler):
           self.write(self.model.get_canvas_cards())
       elif 'refreshmodel' in self.request.arguments:
           self.write(self.model.get_model_cards())
+      elif 'get_image_path' in self.request.arguments:
+          self.write('static/data/' + self.get_argument('get_image_path') + '.png')
+
 
 
 class TokenHandler(tornado.web.RequestHandler):
