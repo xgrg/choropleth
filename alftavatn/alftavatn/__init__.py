@@ -12,14 +12,14 @@ def get_actions(o, model, rules):
             if obj.startswith('ANY '):
                       t = obj[4:]
                       objects_satisfying = []
-                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                      for each in [ob for ob in model if 'types' in model[o] and t in model[o]['types']]:
                           if model[each][prop] == val:
                               objects_satisfying.append(each)
                       if len(objects_satisfying) == 0:
                           satisfied = False
             elif obj.startswith('ALL '):
                       t = obj[4:]
-                      for each in [o for o in model if 'types' in model[o] and t in model[o]['types']]:
+                      for each in [ob for ob in model if 'types' in model[o] and t in model[o]['types']]:
                           if model[each][prop] != val:
                               satisfied = False
             elif model[obj][prop] != val:
