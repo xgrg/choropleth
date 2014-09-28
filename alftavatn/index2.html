@@ -1,0 +1,90 @@
+
+<html>
+   <head>
+      <link href='http://fonts.googleapis.com/css?family=Roboto:100' rel='stylesheet' type='text/css'>
+
+      <meta charset="UTF-8">
+      <link rel="stylesheet" href="{{ static_url("styles/style.css") }}">
+
+      <script type="text/javascript" src="{{ static_url("js/jquery/jquery.min.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/clickitem.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/sprite.js") }}"></script>
+      <script type="text/javascript">
+
+         // Canvas handling
+         var FPS = 30;
+         var SECONDS_BETWEEN_FRAMES = 1 / FPS;
+         var g_GameObjectManager = null;
+         var g_run = new Image();
+         g_run.src = "{{static_url("data/run.png")}}";
+
+         window.onload = init;
+         function init()
+         {
+             new GameObjectManager().startupGameObjectManager();
+         }
+
+         $(document).ready(function(){
+            // Websocket handling
+            var ws = new WebSocket("ws://localhost:8000/websocket");
+            ws.onopen = function() {
+            };
+            ws.onmessage = function (evt) {
+               var res = evt.data;
+               res = res.split('@');
+               command = res[0];
+               console.log(res[0] + ' ' + res[1]);
+               if (command == 'dialog'){
+                  $("#response").html($("#response").html() + "<br>" + res[1]);
+               }
+               else if (command == 'fov'){
+                  $("#fov").html(res[1]);
+                  var g_run2 = new Image();
+                  g_run2.src = "{{static_url("data/house.png")}}";
+                  $("#refreshcanvas").click();
+                  g_GameObjectManager.house = new VisualGameObject().startupVisualGameObject(g_run2, 1, 1, 1);
+               }
+               else if (command == 'change'){
+                  $("#refreshmodel").click();
+               }
+            };
+
+            // Retrieving data from model
+            var html = get_objects();
+            console.log(html);
+            $('#objects').html(get_objects());
+            $("span.object").click(function(){
+               click_item($(this));
+            });
+         });
+   </script>
+   </head>
+
+
+   <body>
+      <h2>Alftavatn</h2>
+      <div id="canvas"></div>
+      <canvas id="viewport" width=900 height=300></canvas>
+
+      <div id="objects" style="border:solid 1px black"> </div>
+      <br>
+      <div id="actions" style="border:solid 1px black"> </div>
+      <br>
+      <div id="adddialog" style="border:solid 1px black">add_dialog </div>
+      <div id="toggledoor" style="border:solid 1px black">toggle_door </div>
+      <div id="cleandata" style="border:solid 1px black">clean_data </div>
+      <br>
+
+<!-- Include model and rules view -->
+      <br>
+      <div id="jstwitter"></div>
+      <span id="refreshmodel"> refresh</span>
+      <div id="rules"></div>
+
+    <br>
+<br>
+(c) GO 2013
+<script>
+</script>
+
+</body></html>

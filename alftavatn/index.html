@@ -7,12 +7,41 @@
       <link rel="stylesheet" href="{{ static_url("styles/token-input.css") }}" type="text/css" />
       <link rel="stylesheet" href="{{ static_url("styles/token-input-facebook.css") }}" type="text/css" />
 
-      <script type="text/javascript" src="{{ static_url("js/jquery.min.js") }}"></script>
-      <script type="text/javascript" src="{{ static_url("js/jquery.tokeninput.js") }}"></script>
-      <script type="text/javascript" src="{{ static_url("js/jquery.gridalicious.min.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/jquery/jquery.min.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/jquery/jquery.tokeninput.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/jquery/jquery.gridalicious.min.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/clickitem.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/sprite.js") }}"></script>
       <script type="text/javascript">
 
+/** target frames per second
+    @type Number
+*/
+var FPS = 30;
+/** time between frames
+    @type Number
+*/
+var SECONDS_BETWEEN_FRAMES = 1 / FPS;
+/** A global reference to the GameObjectManager instance
+    @type GameObjectManager
+*/
+var g_GameObjectManager = null;
+/** An image to be used by the application
+    @type Image
+*/
+var g_run = new Image();
+g_run.src = "{{static_url("data/run.png")}}";
+
+// The entry point of the application is set to the init function
+window.onload = init;
+
+/**
+    Application entry point
+*/
+function init()
+{
+    new GameObjectManager().startupGameObjectManager();
+}
 
          $(document).ready(function(){
             function make_base(images, image, x, y, w, h, canvas, context)
