@@ -90,37 +90,6 @@ function RepeatingGameObject()
 }
 RepeatingGameObject.prototype = new VisualGameObject();
 /**
-    Removes a number of objects from the array
-    @param from The first object to remove
-    @param to (Optional) The last object to remove
-*/
-
-function GameObjectsArray(){};
-GameObjectsArray.prototype = new Array();
-GameObjectsArray.prototype.remove = function(/**Number*/ from, /**Number*/ to)
-{
-  var rest = this.slice((to || from) + 1 || this.length);
-  this.length = from < 0 ? this.length + from : from;
-  return this.push.apply(this, rest);
-};
-
-/**
-    Removes a specific object from the array
-    @param object The object to remove
-*/
-GameObjectsArray.prototype.removeObject = function(object)
-{
-    for (var i = 0; i < this.length; ++i)
-    {
-        console.log(i, this[i]);
-        if (this[i] === object)
-        {
-            this.remove(i);
-            break;
-        }
-    }
-}
-/**
     The base class for all elements that appear in the game.
     @author <a href="mailto:matthewcasperson@gmail.com">Matthew Casperson</a>
     @class
@@ -325,7 +294,7 @@ function GameObjectManager()
     /** An array of game objects
         @type Arary
     */
-    this.gameObjects = new GameObjectsArray();
+    this.gameObjects = new Array();
     /** The time that the last frame was rendered
         @type Date
     */
@@ -359,6 +328,10 @@ function GameObjectManager()
     */
     this.backBufferContext2D = null;
 
+    // Picking buffer
+    this.pickingBuffer = null;
+    this.pickingBufferContext2D = null;
+
     /**
         Initialises this object
         @return A reference to the initialised object
@@ -375,6 +348,12 @@ function GameObjectManager()
         this.backBuffer.width = this.canvas.width;
         this.backBuffer.height = this.canvas.height;
         this.backBufferContext2D = this.backBuffer.getContext('2d');
+
+        // Picking buffer
+        this.pickingBuffer = document.createElement('canvas');
+        this.pickingBuffer.width = this.canvas.width;
+        this.pickingBuffer.height = this.canvas.height;
+        this.pickingBufferContext2D = this.pickingBuffer.getContext('2d');
 
         // create a new ApplicationManager
         this.applicationManager = new ApplicationManager().startupApplicationManager();
@@ -398,23 +377,14 @@ function GameObjectManager()
         // clear the drawing contexts
         this.backBufferContext2D.clearRect(0, 0, this.backBuffer.width, this.backBuffer.height);
         this.context2D.clearRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // first update all the game objects
-        for (x in this.gameObjects)
-        {
-            if (this.gameObjects[x].update)
-            {
-                this.gameObjects[x].update(dt, this.backBufferContext2D, this.xScroll, this.yScroll);
-            }
-        }
+        this.pickingBufferContext2D.clearRect(0, 0, this.pickingBuffer.width, this.pickingBuffer.height);
 
         // then draw the game objects
         for (x in this.gameObjects)
         {
-            if (this.gameObjects[x].draw)
-            {
-                this.gameObjects[x].draw(dt, this.backBufferContext2D, this.xScroll, this.yScroll);
-            }
+            this.gameObjects[x].draw(dt, this.backBufferContext2D, this.xScroll, this.yScroll);
+            pickData = this.getObjectPickingMask(x);
+            this.pickingBufferContext2D.drawImage(pickData, 0, 0);
         }
 
         // copy the back buffer to the displayed canvas
@@ -437,9 +407,68 @@ function GameObjectManager()
     */
     this.removeGameObject = function(gameObject)
     {
-        this.gameObjects.removeObject(gameObject);
+       console.log('removing object', gameObject.name, this.gameObjects.length);
+       for (var i = 0; i < this.gameObjects.length; ++i)
+       {
+           console.log(i, this.gameObjects[i]);
+           if (this.gameObjects[i] === gameObject)
+           {
+               console.log('found');
+               var t = this.gameObjects.splice(i, 1);
+               console.log(t.name);
+               break;
+           }
+       }
+    }
+
+    // Get Object Picking Mask
+    this.getObjectPickingMask = function(i){
+         object = this.gameObjects[i];
+         buf = document.createElement('canvas');
+         buf.width = this.canvas.width;
+         buf.height = this.canvas.height;
+         c = buf.getContext('2d');
+         c.clearRect(0, 0, buf.width, buf.height);
+         sourceX = 0;
+         if (object.currentFrame){
+            sourceX = object.currentFrame * object.frameWidth;
+         }
+
+         if (object.frameWidth){
+            c.drawImage(object.image, sourceX, 0, object.frameWidth, object.image.height, object.x, object.y, object.frameWidth, object.image.height);
+         }
+         else{
+            c.drawImage(object.image, sourceX, 0, object.image.width, object.image.height, object.x, object.y, object.image.width, object.image.height);
+         }
+         imageData = c.getImageData(0, 0, buf.width, buf.height);
+         for (y = 0; y < buf.height; y++) {
+           inpos = y * buf.width * 4; // *4 for 4 ints per pixel
+           outpos = inpos;
+           for (x = 0; x < buf.width; x++) {
+               r = imageData.data[inpos++];
+               g = imageData.data[inpos++];
+               b = imageData.data[inpos++];
+               a = imageData.data[inpos++];
+
+               if (a > 0){
+                  imageData.data[outpos++] = parseInt(i)+1;
+                  imageData.data[outpos++] = 0;
+                  imageData.data[outpos++] = 0;
+                  imageData.data[outpos++] = 255;
+               }
+               else{
+                  imageData.data[outpos++] = 0;
+                  imageData.data[outpos++] = 0;
+                  imageData.data[outpos++] = 0;
+                  imageData.data[outpos++] = 0;
+               }
+           }
+        }
+        c.putImageData(imageData, 0, 0);
+        return buf;
     }
 }
+
 
 function removeVisualGameObjectByName(name){
    for (each in g_GameObjectManager.gameObjects){
