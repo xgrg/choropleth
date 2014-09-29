@@ -9,6 +9,7 @@
       <script type="text/javascript" src="{{ static_url("js/jquery/jquery.min.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/clickitem.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/sprite.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/json.js") }}"></script>
       <script type="text/javascript">
 
          // Canvas handling
@@ -34,15 +35,42 @@
                res = res.split('@');
                command = res[0];
                console.log(res[0] + ' ' + res[1]);
+
+               // If the machine is sending a dialog, displays it
                if (command == 'dialog'){
                   $("#response").html($("#response").html() + "<br>" + res[1]);
                }
+               // If a new field of view is received, updates the canvas
+               // For now, all fields of views are receiving unregarding the player id
                else if (command == 'fov'){
+                  // Looking for changes in the new version
+                  old_fov = $("#fov").html();
                   $("#fov").html(res[1]);
-                  var g_run2 = new Image();
-                  g_run2.src = "{{static_url("data/house.png")}}";
-                  $("#refreshcanvas").click();
-                  g_GameObjectManager.house = new VisualGameObject().startupVisualGameObject(g_run2, 1, 1, 1);
+                  console.log('toto');
+                  console.log(old_fov);
+                  console.log(res[1]);
+                  diff = json_diff(old_fov, res[1]);
+                  console.log('added:', diff[0], 'removed:', diff[1]);
+                  //First items that were added, then items deleted.
+
+                  for (var each in diff[1]){
+                     imobj = diff[1][each];
+                     $("#refreshcanvas").click();
+                     console.log('removing', imobj);
+                     console.log(Object.keys(g_GameObjectManager.applicationManager.sprites[imobj].shutdownVisualGameObject));
+                     //t = g_GameObjectManager.gameObjects[0]; //applicationManager.sprites[imobj];
+                     //t.shutdownVisualGameObject();
+                     removeVisualGameObjectByName(imobj);
+                  }
+
+                  for (var each in diff[0]){
+                     imobj = diff[0][each];
+                     var imname = $.ajax({type:"POST", url:"", data: {'get_image_path': imobj}, async:false} ).responseText;
+                     var g_run2 = new Image();
+                     g_run2.src = imname ; //"{{static_url("data/house.png")}}";
+                     $("#refreshcanvas").click();
+                     g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, 1, 1, 1);
+                  }
                }
                else if (command == 'change'){
                   $("#refreshmodel").click();
@@ -65,6 +93,7 @@
       <h2>Alftavatn</h2>
       <div id="canvas"></div>
       <canvas id="viewport" width=900 height=300></canvas>
+      <div id="fov">{"player":[]}</div><br>
 
       <div id="objects" style="border:solid 1px black"> </div>
       <br>

@@ -12,7 +12,7 @@ class IndexHandler(tornado.web.RequestHandler):
 
   def get(self):
     rules = ' <br/>'.join([tornado.web.escape.json_encode(e) for e in self.rules])
-    self.render("index.html", model = self.model, rules = rules, canvas = self.model.get_canvas_cards())
+    self.render("index2.html", model = self.model, rules = rules, canvas = self.model.get_canvas_cards())
 
   def post(self):
       print self.request.arguments
@@ -29,14 +29,14 @@ class IndexHandler(tornado.web.RequestHandler):
            obj = self.get_argument('object')
            actions = get_actions(obj, self.model, self.rules)
            self.write(','.join(actions))
-      elif 'fov' in self.request.arguments:
-          self.write(json.dumps(self.model.fov))
-      elif 'refreshcanvas' in self.request.arguments:
-          self.write(self.model.get_canvas_cards())
-      elif 'refreshmodel' in self.request.arguments:
-          self.write(self.model.get_model_cards())
+#      elif 'fov' in self.request.arguments:
+ #         self.write(json.dumps(self.model.fov))
+#      elif 'refreshcanvas' in self.request.arguments:
+#          self.write(self.model.get_canvas_cards())
+#      elif 'refreshmodel' in self.request.arguments:
+#          self.write(self.model.get_model_cards())
       elif 'get_image_path' in self.request.arguments:
-          self.write('static/data/' + self.get_argument('get_image_path') + '.png')
+          self.write('static/data/' + self.model[self.get_argument('get_image_path')]['image'] + '.png')
 
 
 
