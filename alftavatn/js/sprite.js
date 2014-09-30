@@ -136,6 +136,24 @@ function VisualGameObject()
     {
         this.shutdownGameObject();
     }
+
+    /**
+        Draws a hitbox in the proper context
+    */
+    this.drawHitbox = function(context)
+    {
+        context.beginPath();
+        context.lineWidth="6";
+        context.strokeStyle="red";
+        if (this.frameWidth){
+           context.rect(this.x, this.y, this.frameWidth, this.image.height);
+        }
+        else{
+           context.rect(this.x, this.y, this.image.width, this.image.height);
+        }
+        context.stroke();
+
+    }
 }
 VisualGameObject.prototype = new GameObject;
 
@@ -394,6 +412,9 @@ function GameObjectManager()
         for (x in this.gameObjects)
         {
             this.gameObjects[x].draw(dt, this.backBufferContext2D, this.xScroll, this.yScroll);
+
+            this.gameObjects[x].drawHitbox(this.backBufferContext2D);
+
             if (this.pickingMode == true){
                pickData = this.getObjectPickingMask(x);
                this.pickingBufferContext2D.drawImage(pickData, 0, 0);
@@ -479,6 +500,27 @@ function GameObjectManager()
         }
         c.putImageData(imageData, 0, 0);
         return buf;
+    }
+
+    this.pickHitbox = function(x, y){
+        best = -1;
+        best_z = -1;
+        for (i in this.gameObjects){
+            o = this.gameObjects[i];
+            if (o.frameWidth){
+               w = o.frameWidth;
+            }
+            else{
+               w = o.image.width;
+            }
+            if (x > o.x && x < o.x + w && y > o.y && y < o.y + o.image.height) {
+               if (best_z < o.zOrder){
+                  best_z = o.zOrder;
+                  best = i;
+               }
+            }
+        }
+        return best;
     }
 }
 

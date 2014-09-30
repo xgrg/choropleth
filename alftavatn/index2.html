@@ -95,6 +95,10 @@
                 var x = event.pageX - canLeft,
                     y = event.pageY - canTop;
                 //console.log(g_GameObjectManager.pickingBufferContext2D.getImageData(x,y,1,1).data);
+                //t = g_GameObjectManager.gameObjects[0];
+                //t.isRunning = !t.isRunning;
+                i = g_GameObjectManager.pickHitbox(x, y);
+                console.log(i);
             },false);
 
          });
