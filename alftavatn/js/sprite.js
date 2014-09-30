@@ -191,6 +191,7 @@ function AnimatedGameObject()
         this.timeBetweenFrames = 1/fps;
         this.timeSinceLastFrame = this.timeBetweenFrames;
         this.frameWidth = this.image.width / this.frameCount;
+        this.isRunning = true;
     }
 
     /**
@@ -205,13 +206,22 @@ function AnimatedGameObject()
         var sourceX = this.frameWidth * this.currentFrame;
         context.drawImage(this.image, sourceX, 0, this.frameWidth, this.image.height, this.x - xScroll, this.y - yScroll, this.frameWidth, this.image.height);
 
-        this.timeSinceLastFrame -= dt;
-        if (this.timeSinceLastFrame <= 0)
-        {
-           this.timeSinceLastFrame = this.timeBetweenFrames;
-           ++this.currentFrame;
-           this.currentFrame %= this.frameCount;
+        if (this.isRunning == true){
+           this.timeSinceLastFrame -= dt;
+           if (this.timeSinceLastFrame <= 0)
+           {
+              this.timeSinceLastFrame = this.timeBetweenFrames;
+              ++this.currentFrame;
+              this.currentFrame %= this.frameCount;
+           }
         }
+    }
+
+    this.start = function(){
+        this.isRunning = true;
+    }
+    this.stop = function(){
+        this.isRunning = false;
     }
 }
 
@@ -329,6 +339,7 @@ function GameObjectManager()
     this.backBufferContext2D = null;
 
     // Picking buffer
+    this.pickingMode = false;
     this.pickingBuffer = null;
     this.pickingBufferContext2D = null;
 
@@ -383,8 +394,10 @@ function GameObjectManager()
         for (x in this.gameObjects)
         {
             this.gameObjects[x].draw(dt, this.backBufferContext2D, this.xScroll, this.yScroll);
-            pickData = this.getObjectPickingMask(x);
-            this.pickingBufferContext2D.drawImage(pickData, 0, 0);
+            if (this.pickingMode == true){
+               pickData = this.getObjectPickingMask(x);
+               this.pickingBufferContext2D.drawImage(pickData, 0, 0);
+            }
         }
 
         // copy the back buffer to the displayed canvas

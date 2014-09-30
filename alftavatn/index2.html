@@ -13,7 +13,7 @@
       <script type="text/javascript">
 
          // Canvas handling
-         var FPS = 0.5;
+         var FPS = 30;
          var SECONDS_BETWEEN_FRAMES = 1 / FPS * 1000;
          var g_GameObjectManager = null;
          var g_run = new Image();
@@ -94,7 +94,7 @@
             can.addEventListener('click', function(event) {
                 var x = event.pageX - canLeft,
                     y = event.pageY - canTop;
-                console.log(g_GameObjectManager.pickingBufferContext2D.getImageData(x,y,1,1).data);
+                //console.log(g_GameObjectManager.pickingBufferContext2D.getImageData(x,y,1,1).data);
             },false);
 
          });
