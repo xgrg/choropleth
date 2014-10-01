@@ -50,6 +50,7 @@
                   diff = json_diff(old_fov, res[1]);
                   console.log('added:', diff[0], 'removed:', diff[1]);
                   //First items that were added, then items deleted.
+                  g_GameObjectManager.unselectObject();
 
                   for (var each in diff[1]){
                      imobj = diff[1][each];
@@ -98,7 +99,14 @@
                 //t = g_GameObjectManager.gameObjects[0];
                 //t.isRunning = !t.isRunning;
                 i = g_GameObjectManager.pickHitbox(x, y);
-                console.log(i);
+                g_GameObjectManager.selectObject(i);
+                name = g_GameObjectManager.gameObjects[i].name;
+                $('span.object').each(function(index){
+                  if ($(this).data('object') == name){
+                    click_item($(this));
+                  }
+                });
+
             },false);
 
          });

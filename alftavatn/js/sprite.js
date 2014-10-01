@@ -140,11 +140,11 @@ function VisualGameObject()
     /**
         Draws a hitbox in the proper context
     */
-    this.drawHitbox = function(context)
+    this.drawHitbox = function(context, lineWidth, color)
     {
         context.beginPath();
-        context.lineWidth="6";
-        context.strokeStyle="red";
+        context.lineWidth=lineWidth;
+        context.strokeStyle=color;
         if (this.frameWidth){
            context.rect(this.x, this.y, this.frameWidth, this.image.height);
         }
@@ -384,6 +384,9 @@ function GameObjectManager()
         this.pickingBuffer.height = this.canvas.height;
         this.pickingBufferContext2D = this.pickingBuffer.getContext('2d');
 
+        // Selected object
+        this.selectedObject = -1;
+
         // create a new ApplicationManager
         this.applicationManager = new ApplicationManager().startupApplicationManager();
 
@@ -413,12 +416,14 @@ function GameObjectManager()
         {
             this.gameObjects[x].draw(dt, this.backBufferContext2D, this.xScroll, this.yScroll);
 
-            this.gameObjects[x].drawHitbox(this.backBufferContext2D);
 
             if (this.pickingMode == true){
                pickData = this.getObjectPickingMask(x);
                this.pickingBufferContext2D.drawImage(pickData, 0, 0);
             }
+        }
+        if (this.selectedObject != -1){
+            this.gameObjects[this.selectedObject].drawHitbox(this.backBufferContext2D, 1, "aliceblue");
         }
 
         // copy the back buffer to the displayed canvas
@@ -522,8 +527,25 @@ function GameObjectManager()
         }
         return best;
     }
+
+    this.selectObject = function(i){
+        assert(i < this.gameObjects.length && i>=0, i + ' must be between 0 and the number of game objects (' + this.gameObjects.length + ')');
+        this.selectedObject = i;
+    }
+    this.unselectObject = function(){
+        this.selectedObject = -1;
+    }
 }
 
+function assert(condition, message) {
+    if (!condition) {
+        message = message || "Assertion failed";
+        if (typeof Error !== "undefined") {
+            throw new Error(message);
+        }
+        throw message; // Fallback
+    }
+}
 
 function removeVisualGameObjectByName(name){
    for (each in g_GameObjectManager.gameObjects){

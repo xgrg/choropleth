@@ -35,6 +35,8 @@ function click_action(clickedaction){
     $('span.object').click(function(){
         click_item($(this));
     });
+
+    g_GameObjectManager.unselectObject();
 }
 
 
