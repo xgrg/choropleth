@@ -305,8 +305,7 @@ function ApplicationManager()
     */
     this.startupApplicationManager = function()
     {
-		this.runner = new AnimatedGameObject().startupAnimatedGameObject('runner', g_run, 300, 200, 1, 12, 20);
-                this.sprites = {};
+        this.sprites = {};
         return this;
     }
 }
