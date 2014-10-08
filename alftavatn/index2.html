@@ -17,6 +17,7 @@
          var SECONDS_BETWEEN_FRAMES = 1 / FPS * 1000;
          var g_GameObjectManager = null;
          var g_run = new Image();
+         var player_id = 'player';
          g_run.src = "{{static_url("data/run.png")}}";
 
          window.onload = init;
@@ -43,22 +44,22 @@
                // For now, all fields of views are receiving unregarding the player id
                else if (command == 'fov'){
                   // Looking for changes in the new version
-                  var fov = $.ajax({type:"POST", url:"", data: {'fov': 'True', 'player_name':'player'}, async:false} ).responseText;
+                  var fov = $.ajax({type:"POST", url:"", data: {'fov': 'True', 'player_name':player_id}, async:false} ).responseText;
                   $("#fov").html(fov);
                   diff = JSON.parse(res[1]);
 
                   //First items that were added, then items deleted.
 
-                  for (var each in diff[1]['player']){
-                     imobj = diff[1]['player'][each];
-                     if (imobj == g_GameObjectManager.selectedObject && diff[0]['player'].indexOf(imobj) == -1){
+                  for (var each in diff[1][player_id]){
+                     imobj = diff[1][player_id][each];
+                     if (imobj == g_GameObjectManager.selectedObject && diff[0][player_id].indexOf(imobj) == -1){
                         g_GameObjectManager.unselectObject();
                      }
                      removeVisualGameObjectByName(imobj);
                   }
 
-                  for (var each in diff[0]['player']){
-                     imobj = diff[0]['player'][each];
+                  for (var each in diff[0][player_id]){
+                     imobj = diff[0][player_id][each];
 
                      // Retrieves position from fov in json
                      f = JSON.parse(fov);
@@ -114,6 +115,7 @@
       <div id="canvas"></div>
       <canvas id="viewport" width=900 height=300></canvas>
       <div id="fov">{}</div><br>
+      <div id="response"></div> <br>
 
       <div id="objects" style="border:solid 1px black"> </div>
       <br>
