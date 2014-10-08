@@ -138,6 +138,17 @@ def solve_function(operations, model = None):
       for p in params:
          res += p
       return res
+   elif fname == 'minus':
+      if len(params) !=1: raise Exception('Function VALUE should have 1 parameter (%s given)'%len(params))
+      return -params[0]
+   elif fname == 'multiply':
+      res = 0
+      for p in params:
+         res = res * p
+      return res
+   elif fname == 'modulo':
+      if len(params) !=2: raise Exception('Function APPEND should have 2 parameters (%s given)'%len(params))
+      return params[0] % params[1]
    elif fname == 'value':
       if len(params) !=1: raise Exception('Function VALUE should have 1 parameter (%s given)'%len(params))
       return params[0]
