@@ -44,26 +44,28 @@
                // For now, all fields of views are receiving unregarding the player id
                else if (command == 'fov'){
                   // Looking for changes in the new version
-                  old_fov = $("#fov").html();
-                  new_fov = res[1];
-                  $("#fov").html(res[1]);
-                  diff = json_diff(old_fov, res[1]);
-                  console.log('added:', diff[0], 'removed:', diff[1]);
+                  //old_fov = $("#fov").html();
+                  //new_fov = res[1];
+                  var fov = $.ajax({type:"POST", url:"", data: {'fov': 'True', 'player_name':'player'}, async:false} ).responseText;
+                  $("#fov").html(fov);
+                  diff = JSON.parse(res[1]); //json_diff(old_fov, res[1]);
+
+                  console.log('added:', diff[0]['player'], 'removed:', diff[1]['player']);
                   //First items that were added, then items deleted.
                   g_GameObjectManager.unselectObject();
 
-                  for (var each in diff[1]){
-                     imobj = diff[1][each];
+                  for (var each in diff[1]['player']){
+                     imobj = diff[1]['player'][each];
                      console.log('removing', imobj);
                      console.log(Object.keys(g_GameObjectManager.applicationManager.sprites[imobj].shutdownVisualGameObject));
                      removeVisualGameObjectByName(imobj);
                   }
 
-                  for (var each in diff[0]){
-                     imobj = diff[0][each];
+                  for (var each in diff[0]['player']){
+                     imobj = diff[0]['player'][each];
 
                      // Retrieves position from fov in json
-                     f = JSON.parse(new_fov)['player'];
+                     f = JSON.parse(fov);
                      x = f[imobj]['x'];
                      y = f[imobj]['y'];
                      w = f[imobj]['w'];
@@ -118,7 +120,7 @@
       <h2>Alftavatn</h2>
       <div id="canvas"></div>
       <canvas id="viewport" width=900 height=300></canvas>
-      <div id="fov">{"player":[]}</div><br>
+      <div id="fov">{}</div><br>
 
       <div id="objects" style="border:solid 1px black"> </div>
       <br>

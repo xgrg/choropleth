@@ -66,24 +66,67 @@ class Engine():
          self.print_buffer(str(item))
 
    def apply_changes(self, verbose=True):
+      def __diff_json__(j1, j2):
+         added = []
+         removed = []
+         for k in j2:
+            if not k in j1:
+               added.append(k)
+            elif j1[k] != j2[k]:
+               removed.append(k)
+               added.append(k)
+         for k in j1:
+            if not k in j2:
+               removed.append(k)
+         return added, removed
+
+
       changes = 0
       if verbose:
          print '(applying following changes :', self.model.pending_changes,')'
+
+      fovadded = {}
+      fovremoved = {}
+
       for obj, v in self.model.pending_changes.items():
          for prop, val in v.items():
             self.model.apply_change(obj, prop, val)
             changes = changes + 1
-            if 'viewer' in self.model[obj].get('types', []) and prop == 'visible':
+            if ('viewer' in self.model[obj].get('types', []) and prop == 'visible') or prop == 'position':
               item = {}
-              for each in self.model[obj].get_property('visible'):
-                 print each, self.model[each]
-                 image = self.model[each].get_property('image')
-                 pos =  self.model[each].get_property('position')
-                 item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'w': pos[2], 'h': pos[3]}
-              self.model.fov[obj] = item
-              self.model.fov_changed(json.dumps(self.model.fov))
+              if prop == 'position':
+                 viewers = []
+                 for v in self.model.fov:
+                    if obj in self.model.fov[v]:
+                       viewers.append(v)
+
+                 for viewer in viewers:
+                    visible = self.model[viewer].get_property('visible')
+                    for each in visible:
+                       print each, self.model[each]
+                       image = self.model[each].get_property('image')
+                       pos =  self.model[each].get_property('position')
+                       item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'w': pos[2], 'h': pos[3]}
+                    res = __diff_json__(self.model.fov[viewer], item)
+                    fovadded[viewer] = res[0]
+                    fovremoved[viewer] = res[1]
+                    self.model.fov[viewer] = item
+              else:
+                 visible = self.model[obj].get_property('visible')
+                 for each in visible:
+                    print each, self.model[each]
+                    image = self.model[each].get_property('image')
+                    pos =  self.model[each].get_property('position')
+                    item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'w': pos[2], 'h': pos[3]}
+
+                 res = __diff_json__(self.model.fov[obj], item)
+                 fovadded[obj] = res[0]
+                 fovremoved[obj] = res[1]
+                 self.model.fov[obj] = item
+
+              self.model.fov_changed(json.dumps([fovadded, fovremoved]))
               if verbose:
-                 print 'FOV CHANGED', self.model.fov
+                 print 'FOV CHANGED', 'added', fovadded, 'removed', fovremoved
       if verbose:
          print '%s changes'%changes
 

@@ -81,7 +81,7 @@ class Model(dict):
         if not hasattr(self, 'fov'):
            viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
            self.fov = dict( [(i, self[i].get('visible', [])) for i in viewers])
-           self.fov_changed(json.dumps(self.fov))
+           self.fov_changed(json.dumps([self.fov, {}]))
            print 'fov_changed', self.fov
 
     def get_canvas_cards(self):

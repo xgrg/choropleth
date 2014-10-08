@@ -6,7 +6,7 @@
   [[["porte", "openstate", "open"], ["player", "location", "street"], ["porte", "ENTRER"]], [["player", "location", "home"], ["SYSTEM", "PRINT", "VOUS ETES CHEZ VOUS"]]],
   [[["player", "location", "street"], ["avion", "PRENDRE"]], [["player", "location", "iceland"], ["SYSTEM", "PRINT", "VOUS ETES EN ISLANDE"], ["SYSTEM", "PRINT", "@VALUE(internal.nb_actions)"]]],
   [[["timer", "START"]], [["timer", "START"]]], [[["timer", "STOP"]], [["timer", "STOP"]]], [[["timer", "CHECK_ICELAND"]], [["timer", "CHECK_ICELAND"]]],
-  [[["timer", "TICK"]], [["internal", "uptime", "@ADD(internal.uptime, 1)"]]],
+  [[["timer", "TICK"]], [["internal", "uptime", "@ADD(internal.uptime, 1)"], ["maison", "position", [10,1,1,1]]]],
   [[["timer", "PRINT_UPTIME"]], [["SYSTEM", "PRINT", "@VALUE(internal.uptime)"]]],
   [[["ANY player", "location", "iceland"], ["timer", "CHECK_ICELAND"]], [["SYSTEM", "PRINT", "Yes !"]]],
   [[["porte", "SORTIR"]], [["player", "visible", ["avion", "maison"]]]],

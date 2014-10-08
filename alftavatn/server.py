@@ -29,8 +29,8 @@ class IndexHandler(tornado.web.RequestHandler):
            obj = self.get_argument('object')
            actions = get_actions(obj, self.model, self.rules)
            self.write(','.join(actions))
-#      elif 'fov' in self.request.arguments:
- #         self.write(json.dumps(self.model.fov))
+      elif 'fov' in self.request.arguments:
+          self.write(json.dumps(self.model.fov[self.get_argument('player_name')]))
 #      elif 'refreshcanvas' in self.request.arguments:
 #          self.write(self.model.get_canvas_cards())
 #      elif 'refreshmodel' in self.request.arguments:
