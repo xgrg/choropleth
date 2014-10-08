@@ -34,7 +34,6 @@
                var res = evt.data;
                res = res.split('@');
                command = res[0];
-               console.log(res[0] + ' ' + res[1]);
 
                // If the machine is sending a dialog, displays it
                if (command == 'dialog'){
@@ -44,22 +43,17 @@
                // For now, all fields of views are receiving unregarding the player id
                else if (command == 'fov'){
                   // Looking for changes in the new version
-                  //old_fov = $("#fov").html();
-                  //new_fov = res[1];
                   var fov = $.ajax({type:"POST", url:"", data: {'fov': 'True', 'player_name':'player'}, async:false} ).responseText;
                   $("#fov").html(fov);
-                  diff = JSON.parse(res[1]); //json_diff(old_fov, res[1]);
+                  diff = JSON.parse(res[1]);
 
-                  console.log('added:', diff[0]['player'], 'removed:', diff[1]['player']);
                   //First items that were added, then items deleted.
 
                   for (var each in diff[1]['player']){
                      imobj = diff[1]['player'][each];
-                     console.log('removing', imobj);
                      if (imobj == g_GameObjectManager.selectedObject && diff[0]['player'].indexOf(imobj) == -1){
                         g_GameObjectManager.unselectObject();
                      }
-                     console.log(Object.keys(g_GameObjectManager.applicationManager.sprites[imobj].shutdownVisualGameObject));
                      removeVisualGameObjectByName(imobj);
                   }
 
@@ -85,7 +79,7 @@
 
             // Retrieving data from model
             var html = get_objects();
-            console.log(html);
+            //console.log(html);
             $('#objects').html(get_objects());
             $("span.object").click(function(){
                click_item($(this));
@@ -99,9 +93,6 @@
             can.addEventListener('click', function(event) {
                 var x = event.pageX - canLeft,
                     y = event.pageY - canTop;
-                //console.log(g_GameObjectManager.pickingBufferContext2D.getImageData(x,y,1,1).data);
-                //t = g_GameObjectManager.gameObjects[0];
-                //t.isRunning = !t.isRunning;
                 i = g_GameObjectManager.pickHitbox(x, y);
                 g_GameObjectManager.selectObject(g_GameObjectManager.gameObjects[i].name);
                 name = g_GameObjectManager.gameObjects[i].name;

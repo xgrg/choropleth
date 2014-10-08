@@ -446,15 +446,11 @@ function GameObjectManager()
     */
     this.removeGameObject = function(gameObject)
     {
-       console.log('removing object', gameObject.name, this.gameObjects.length);
        for (var i = 0; i < this.gameObjects.length; ++i)
        {
-           console.log(i, this.gameObjects[i]);
            if (this.gameObjects[i] === gameObject)
            {
-               console.log('found');
                var t = this.gameObjects.splice(i, 1);
-               console.log(t.name);
                break;
            }
        }
@@ -549,7 +545,6 @@ function assert(condition, message) {
 function removeVisualGameObjectByName(name){
    for (each in g_GameObjectManager.gameObjects){
       if (g_GameObjectManager.gameObjects[each].name == name){
-         console.log(name, each);
          g_GameObjectManager.gameObjects[each].shutdownVisualGameObject();
       }
    }
