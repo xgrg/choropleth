@@ -52,11 +52,13 @@
 
                   console.log('added:', diff[0]['player'], 'removed:', diff[1]['player']);
                   //First items that were added, then items deleted.
-                  g_GameObjectManager.unselectObject();
 
                   for (var each in diff[1]['player']){
                      imobj = diff[1]['player'][each];
                      console.log('removing', imobj);
+                     if (imobj == g_GameObjectManager.selectedObject && diff[0]['player'].indexOf(imobj) == -1){
+                        g_GameObjectManager.unselectObject();
+                     }
                      console.log(Object.keys(g_GameObjectManager.applicationManager.sprites[imobj].shutdownVisualGameObject));
                      removeVisualGameObjectByName(imobj);
                   }
@@ -101,7 +103,7 @@
                 //t = g_GameObjectManager.gameObjects[0];
                 //t.isRunning = !t.isRunning;
                 i = g_GameObjectManager.pickHitbox(x, y);
-                g_GameObjectManager.selectObject(i);
+                g_GameObjectManager.selectObject(g_GameObjectManager.gameObjects[i].name);
                 name = g_GameObjectManager.gameObjects[i].name;
                 $('span.object').each(function(index){
                   if ($(this).data('object') == name){

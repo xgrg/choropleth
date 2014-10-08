@@ -420,9 +420,10 @@ function GameObjectManager()
                pickData = this.getObjectPickingMask(x);
                this.pickingBufferContext2D.drawImage(pickData, 0, 0);
             }
-        }
-        if (this.selectedObject != -1){
-            this.gameObjects[this.selectedObject].drawHitbox(this.backBufferContext2D, 1, "aliceblue");
+
+            if (this.gameObjects[x].name == this.selectedObject){
+               this.gameObjects[x].drawHitbox(this.backBufferContext2D, 1, "aliceblue");
+            }
         }
 
         // copy the back buffer to the displayed canvas
@@ -528,7 +529,6 @@ function GameObjectManager()
     }
 
     this.selectObject = function(i){
-        assert(i < this.gameObjects.length && i>=0, i + ' must be between 0 and the number of game objects (' + this.gameObjects.length + ')');
         this.selectedObject = i;
     }
     this.unselectObject = function(){
