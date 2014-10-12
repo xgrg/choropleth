@@ -145,7 +145,7 @@ class Engine():
            elif prevchanges:
                print '(model has met 0 changes during last iteration, exiting loop)\n'
 
-def create_files():
+def create_files(modelfile, rulesfile):
    ''' A simple function that makes the files needed for running everything.
 
    Make copies of model and rules in /tmp in case they do not exist.'''
@@ -156,11 +156,17 @@ def create_files():
 
    for fp, source in zip(['/tmp/model.json', '/tmp/rules.json'], [modelfile, rulesfile]):
       if not os.path.exists(fp):
+         print 'Copying', source, 'to', fp
          os.system('cp %s %s'%(source, fp))
 
 if __name__ == '__main__':
+   import argparse
+   parser = argparse.ArgumentParser(description='Alftavatn engine')
+   parser.add_argument('-m','--model', help='Model file', required=True)
+   parser.add_argument('-r','--rules', help='Rules file', required=True)
+   args = vars(parser.parse_args())
    # Make files (model, rules) ready for execution
-   create_files()
+   create_files(args['model'], args['rules'])
 
    # Where everything begins
    server = TornadoServer()
