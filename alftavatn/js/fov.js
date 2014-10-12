@@ -48,7 +48,7 @@ function fov_update(res){
             var imname = $.ajax({type:"POST", url:"", data: {'get_image_path': imobj}, async:false} ).responseText;
             var g_run2 = new Image();
             g_run2.src = imname ;
-            g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, 1);
+            g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, 1, w, h);
          }
       }
 }

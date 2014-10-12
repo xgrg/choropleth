@@ -28,27 +28,27 @@
    },
    "pouf":{
       "image": "pouf",
-      "position" : [10,170,160,79]
+      "position" : [10,170,160,99]
    },
    "lampe":{
       "image": "lamp",
-      "position" : [0,0,160,79]
+      "position" : [0,0,79,79]
    },
    "ventilateur":{
       "image": "fan",
-      "position" : [350,130,0,0]
+      "position" : [350,130,119,148]
    },
    "porte":{
       "image":"door1",
-      "position": [700,60,0,0]
+      "position": [700,60,177,233]
    },
    "fenetre":{
       "image":"window",
-      "position": [470,30,0,0]
+      "position": [470,30,223,150]
    },
    "ronron":{
       "image": "ronron",
-      "position":[220,110,0,0]
+      "position":[220,110,122,30]
    }
 
 
