@@ -71,6 +71,19 @@ class Model(dict):
         self.pending_changes = {}
 
     def initialize(self):
+        def __diff_json__(j1, j2):
+         added = []
+         removed = []
+         for k in j2:
+            if not k in j1:
+               added.append(k)
+            elif j1[k] != j2[k]:
+               removed.append(k)
+               added.append(k)
+         for k in j1:
+            if not k in j2:
+               removed.append(k)
+         return added, removed
         self.changes = -1
         self.reset_pending_changes()
         self.has_changed = False
@@ -80,7 +93,21 @@ class Model(dict):
         # Initializing field-of-views
         if not hasattr(self, 'fov'):
            viewers = [e for e in self if 'viewer' in self[e].get('types',[])]
-           self.fov = dict( [(i, self[i].get('visible', [])) for i in viewers])
+           fovadded = {}
+           fovremoved = {}
+           self.fov = {}
+           for viewer in viewers:
+              item = {}
+              visible = self[viewer].get_property('visible')
+              for each in visible:
+                 print each, self[each]
+                 image = self[each].get_property('image')
+                 pos =  self[each].get_property('position')
+                 item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'w': pos[2], 'h': pos[3]}
+              res = __diff_json__(self.fov.get(viewer, {}), item)
+              fovadded[viewer] = res[0]
+              fovremoved[viewer] = res[1]
+              self.fov[viewer] = item
            self.fov_changed(json.dumps([self.fov, {}]))
            print 'fov_changed', self.fov
 
