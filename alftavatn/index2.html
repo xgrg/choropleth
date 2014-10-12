@@ -10,6 +10,7 @@
       <script type="text/javascript" src="{{ static_url("js/clickitem.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/sprite.js") }}"></script>
       <script type="text/javascript" src="{{ static_url("js/json.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/fov.js") }}"></script>
       <script type="text/javascript">
 
          // Canvas handling
@@ -20,13 +21,10 @@
          var player_id = 'player';
          g_run.src = "{{static_url("data/run.png")}}";
 
-         window.onload = init;
-         function init()
-         {
-             new GameObjectManager().startupGameObjectManager();
-         }
 
          $(document).ready(function(){
+            new GameObjectManager().startupGameObjectManager();
+
             // Websocket handling
             var ws = new WebSocket("ws://localhost:8000/websocket");
             ws.onopen = function() {
@@ -44,34 +42,7 @@
                // For now, all fields of views are receiving unregarding the player id
                else if (command == 'fov'){
                   // Looking for changes in the new version
-                  var fov = $.ajax({type:"POST", url:"", data: {'fov': 'True', 'player_name':player_id}, async:false} ).responseText;
-                  $("#fov").html(fov);
-                  diff = JSON.parse(res[1]);
-
-                  //First items that were added, then items deleted.
-
-                  for (var each in diff[1][player_id]){
-                     imobj = diff[1][player_id][each];
-                     if (imobj == g_GameObjectManager.selectedObject && diff[0][player_id].indexOf(imobj) == -1){
-                        g_GameObjectManager.unselectObject();
-                     }
-                     removeVisualGameObjectByName(imobj);
-                  }
-
-                  for (var each in diff[0][player_id]){
-                     imobj = diff[0][player_id][each];
-
-                     // Retrieves position from fov in json
-                     f = JSON.parse(fov);
-                     x = f[imobj]['x'];
-                     y = f[imobj]['y'];
-                     w = f[imobj]['w'];
-                     h = f[imobj]['h'];
-                     var imname = $.ajax({type:"POST", url:"", data: {'get_image_path': imobj}, async:false} ).responseText;
-                     var g_run2 = new Image();
-                     g_run2.src = imname ;
-                     g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, 1);
-                  }
+                  fov_update(res);
                }
                else if (command == 'change'){
                   $("#refreshmodel").click();
@@ -97,6 +68,7 @@
                 i = g_GameObjectManager.pickHitbox(x, y);
                 g_GameObjectManager.selectObject(g_GameObjectManager.gameObjects[i].name);
                 name = g_GameObjectManager.gameObjects[i].name;
+                console.log(name);
                 $('span.object').each(function(index){
                   if ($(this).data('object') == name){
                     click_item($(this));
@@ -104,6 +76,10 @@
                 });
 
             },false);
+
+
+            // First init of the fov
+            fov_update();
 
          });
    </script>
