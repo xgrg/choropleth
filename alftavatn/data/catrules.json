@@ -1,0 +1,18 @@
+[
+[[["title","CLICK"]],[["player", "visible", ["room"]], ["SYSTEM", "PRINT", "LE JEU COMMENCE"], ["timer", "START"]]],
+[[["timer", "START"]], [["timer", "START"]]],
+[[["room", "CLICK"]], [["SYSTEM", "PRINT", "MIAOU ! rrrrRRRrrrrRRR...."]]],
+[[["timer", "STOP"]], [["timer", "STOP"]]],
+[[["timer", "TICK"]], [["internal", "uptime", "@ADD(internal.uptime, 1)"]]],
+[[["timer", "TICK"], ["internal", "uptime", 2]], [["player", "visible", "@APPEND(player.visible, cat)"], ["SYSTEM", "PRINT", "IL ETAIT UNE FOIS UN MINOU..."] ]],
+[[["timer", "TICK"], ["internal", "uptime", 4]], [["player", "visible", "@APPEND(player.visible, pouf)"], ["SYSTEM", "PRINT", "IL AVAIT UN POUF PERSO..."] ]],
+[[["timer", "TICK"], ["internal", "uptime", 6]], [["player", "visible", "@APPEND(player.visible, ventilateur)"], ["SYSTEM", "PRINT", "UN VENTILATEUR..."] ]],
+[[["timer", "TICK"], ["internal", "uptime", 8]], [["player", "visible", "@APPEND(player.visible, lampe)"], ["SYSTEM", "PRINT", "ET UNE LAMPE AUSSI..."] ]],
+[[["timer", "TICK"], ["internal", "uptime", 9]], [["player", "visible", "@APPEND(player.visible, fenetre)"], ["SYSTEM", "PRINT", "ET UNE FENETRE AUSSI..."] ]],
+[[["timer", "TICK"], ["internal", "uptime", 10]], [["player", "visible", "@APPEND(player.visible, porte)"], ["SYSTEM", "PRINT", "ET UNE PORTE AUSSI..."], ["timer","STOP"] ]],
+[[["room", "CLICK"], ["internal", "ronron_visible", 0]], [["internal", "ronron_visible", 1], ["player", "visible", "@APPEND(player.visible, ronron)"]]],
+[[["room", "CLICK"], ["internal", "ronron_visible", 1]], [["internal", "ronron_visible", 0], ["player", "visible", "@REMOVE(player.visible, ronron)"]]]
+
+
+]
+

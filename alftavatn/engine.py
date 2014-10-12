@@ -93,7 +93,6 @@ class Engine():
             self.model.apply_change(obj, prop, val)
             changes = changes + 1
             if ('viewer' in self.model[obj].get('types', []) and prop == 'visible') or prop == 'position':
-              item = {}
               if prop == 'position':
                  viewers = []
                  for v in self.model.fov:
@@ -101,6 +100,7 @@ class Engine():
                        viewers.append(v)
 
                  for viewer in viewers:
+                    item = {}
                     visible = self.model[viewer].get_property('visible')
                     for each in visible:
                        print each, self.model[each]
@@ -113,6 +113,7 @@ class Engine():
                     self.model.fov[viewer] = item
               else:
                  visible = self.model[obj].get_property('visible')
+                 item = {}
                  for each in visible:
                     print each, self.model[each]
                     image = self.model[each].get_property('image')
@@ -149,10 +150,6 @@ def create_files(modelfile, rulesfile):
    ''' A simple function that makes the files needed for running everything.
 
    Make copies of model and rules in /tmp in case they do not exist.'''
-
-   homedir = os.path.dirname(os.path.abspath(__file__))
-   modelfile = os.path.join(homedir, 'data', 'model.json')
-   rulesfile = os.path.join(homedir, 'data', 'rules.json')
 
    for fp, source in zip(['/tmp/model.json', '/tmp/rules.json'], [modelfile, rulesfile]):
       if not os.path.exists(fp):

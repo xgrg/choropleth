@@ -1,0 +1,56 @@
+{
+   "player":{
+      "name" : "player",
+      "types": ["viewer", "player"],
+      "location" : "home",
+      "visible": ["title"]},
+   "title":{
+      "image": "title",
+      "position": [0,0,900,300]
+   },
+   "room":{
+      "image": "room",
+      "position": [0,0,900,300]
+   },
+   "timer": {
+      "types": ["timer"],
+      "interval": 1,
+      "periodic": "True",
+      "running": "False"
+   },
+   "internal":{
+      "uptime": 0,
+      "ronron_visible":0
+   },
+   "cat":{
+      "image": "cat",
+      "position" : [200,110,151,174]
+   },
+   "pouf":{
+      "image": "pouf",
+      "position" : [10,170,160,79]
+   },
+   "lampe":{
+      "image": "lamp",
+      "position" : [0,0,160,79]
+   },
+   "ventilateur":{
+      "image": "fan",
+      "position" : [350,130,0,0]
+   },
+   "porte":{
+      "image":"door1",
+      "position": [700,60,0,0]
+   },
+   "fenetre":{
+      "image":"window",
+      "position": [470,30,0,0]
+   },
+   "ronron":{
+      "image": "ronron",
+      "position":[220,110,0,0]
+   }
+
+
+
+}
