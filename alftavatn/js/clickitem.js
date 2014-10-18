@@ -57,8 +57,8 @@ function click_item(clickeditem){
     for (each in res){
         html = html + '<span style="border:solid black 1px;" class="action" data-object="'+ obj +'" data-action="'+res[each]+'">'+res[each]+'</span> '
         // if an action "click" exists, then fire it
-        if (res[each] == 'CLICK'){
-          fire_action(obj, "CLICK");
+        if (res[each] == 'click'){
+          fire_action(obj, "click");
         }
     }
     $("#actions").html(html);

@@ -61,6 +61,7 @@ class Engine():
       self.is_running = False
 
    def apply_prints(self):
+      print 'apply prints'
       while self.pending_prints:
          item = self.pending_prints.pop()
          self.print_buffer(str(item))
@@ -157,17 +158,23 @@ def create_files(modelfile, rulesfile):
          os.system('cp %s %s'%(source, fp))
 
 if __name__ == '__main__':
-   import argparse
-   parser = argparse.ArgumentParser(description='Alftavatn engine')
-   parser.add_argument('-m','--model', help='Model file', required=True)
-   parser.add_argument('-r','--rules', help='Rules file', required=True)
-   args = vars(parser.parse_args())
+   #import argparse
+   #parser = argparse.ArgumentParser(description='Alftavatn engine')
+   #parser.add_argument('-m','--model', help='Model file', required=True)
+   #parser.add_argument('-r','--rules', help='Rules file', required=True)
+   #args = vars(parser.parse_args())
    # Make files (model, rules) ready for execution
-   create_files(args['model'], args['rules'])
+   #create_files(args['model'], args['rules'])
 
    # Where everything begins
    server = TornadoServer()
-   server.engine.load_model('/tmp/model.json')
-   server.engine.load_rules('/tmp/rules.json')
-   server.engine.apply_rules()
+   #server.engine.load_model('/tmp/model.json')
+   #server.engine.load_rules('/tmp/rules.json')
+   #server.engine.apply_rules()
+   import model
+   model.create_world()
+   server.engine.model = model.u
+   server.engine.model.pending_print.connect(server.engine.add_pending_print)
+   server.engine.model.apply_prints.connect(server.engine.apply_prints)
+   server.engine.model.apply_changes()
    server.start_thread()

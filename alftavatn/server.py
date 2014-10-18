@@ -8,29 +8,30 @@ class IndexHandler(tornado.web.RequestHandler):
   def initialize(self, engine=None):
     self.engine = engine
     self.model = engine.model
-    self.rules = engine.rules
 
   def get(self):
-    rules = ' <br/>'.join([tornado.web.escape.json_encode(e) for e in self.rules])
-    self.render("index2.html", model = self.model, rules = rules, canvas = self.model.get_canvas_cards())
+    #rules = ' <br/>'.join([tornado.web.escape.json_encode(e) for e in self.rules])
+    self.render("index2.html", model = self.model) #, canvas = self.model.get_canvas_cards())
 
   def post(self):
       print self.request.arguments
       if 'send_action' in self.request.arguments:
           obj = self.get_argument('object')
           act = self.get_argument('action')
-          self.engine.model.action_added("%s,%s"%(obj, act))
+          self.model.add_action("%s,%s"%(obj, act))
       elif 'get_objects' in self.request.arguments:
            from alftavatn import get_objects
-           objects = get_objects(self.model, self.rules)
+           objects = self.model.get_objects() #(self.model, self.rules)
            self.write(','.join(objects))
       elif 'get_actions' in self.request.arguments:
            from alftavatn import get_actions
            obj = self.get_argument('object')
-           actions = get_actions(obj, self.model, self.rules)
+           actions = self.model.get_actions(obj)
            self.write(','.join(actions))
       elif 'fov' in self.request.arguments:
-          self.write(json.dumps(self.model.fov[self.get_argument('player_name')]))
+          res = json.dumps(self.model.fov[self.get_argument('player_name')])
+          print 'fov return', res
+          self.write(res)
 #      elif 'refreshcanvas' in self.request.arguments:
 #          self.write(self.model.get_canvas_cards())
 #      elif 'refreshmodel' in self.request.arguments:
