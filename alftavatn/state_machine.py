@@ -14,6 +14,10 @@ class FovSignal(Signal):
     def __call__(self, data):
        Signal.__call__(self, 'fov@' + data)
 
+class AnimSignal(Signal):
+    def __call__(self, data):
+       Signal.__call__(self, 'anim@' + data)
+
 class Object(dict):
     def __init__(self, name, d):
        dict.__init__(self, d)

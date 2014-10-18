@@ -1,4 +1,4 @@
-from state_machine import ChangeSignal, FovSignal, Signal
+from state_machine import AnimSignal, ChangeSignal, FovSignal, Signal
 from Queue import Queue
 
 def __diff_json__(j1, j2):
@@ -26,6 +26,7 @@ class Universe(dict):
       self.fov_changed = FovSignal()
       self.pending_print = Signal()
       self.apply_prints = Signal()
+      self.animstate_changed = AnimSignal()
 
    def get_objects(self):
        '''Returns a list of objects existing in the current model.'''
@@ -69,9 +70,16 @@ class Universe(dict):
            image = self[each]['image']
            pos =  self[each]['position']
            z = self[each]['zorder']
-           item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'z':z}
+           item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'z':z }
            if len(pos) == 4:
+               print 'image', image
                item[each].update({'w':pos[2], 'h':pos[3]})
+           if isinstance(self[each], Animated):
+               f = self[each]['frame']
+               running = self[each]['running']
+               fps = self[each]['fps']
+               framecount = self[each]['framecount']
+               item[each].update({'frame':f, 'running':running, 'fps': fps, 'framecount': framecount})
        return item
 
    def apply_changes(self):
@@ -229,6 +237,26 @@ class Visual(Object):
       properties['zorder'] = zorder
       Object.__init__(self, name, properties)
 
+class Animated(Visual):
+    def __init__(self, frame=0, framecount=1, fps=5, **kwargs):
+      kwargs.setdefault('properties', {})
+      kwargs['properties']['frame'] = frame
+      kwargs['properties']['running'] = False
+      kwargs['properties']['framecount'] = framecount
+      kwargs['properties']['fps'] = fps
+      Visual.__init__(self, **kwargs )
+      self.state_changed = Signal()
+      self.state_changed.connect(u.animstate_changed)
+
+    def start(self):
+      self['running'] = True
+      self.state_changed('%s,true'%self.name)
+
+    def stop(self):
+      self['running'] = False
+      self.state_changed('%s,false'%self.name)
+
+
 class Player(Viewer):
    def __init__(self, name, properties={}):
       Viewer.__init__(self, name, properties)
@@ -292,12 +320,20 @@ class Internal(Object):
    def __init__(self, **kwargs):
       Object.__init__(self, **kwargs)
 
+def toggle_explode():
+    if u['explode']['running']:
+        u['explode'].stop()
+    else:
+        u['explode'].start()
 
 def create_world():
 
 
-    t = Title(name = 'title', image = 'title', position =  [0,0,900,300])
-    r = Room(name = 'room', image = 'room', zorder=0, position =  [0,0,900,300])
+    t = Title(name = 'title', image = 'title', zorder=0, position =  [0,0,900,300])
+    exp = Animated(name='explode', image='explode', zorder=1, position = [0,0], frame = 6, framecount=13)
+    exp.click = Action(True, toggle_explode)
+
+    r = Room(name = 'room', image = 'room', zorder=0, position =  [0,0])#,900,300])
 
     def is_title():
        return u['player']['visible'] == ['title']
@@ -362,7 +398,7 @@ def create_world():
     p = Player(name = 'player')
     p['location'] = 'home'
     u.apply_changes()
-    u['player']['visible'] = ['title']
+    u['player']['visible'] = ['explode','title']
 
 
 

@@ -47,6 +47,13 @@
                else if (command == 'change'){
                   $("#refreshmodel").click();
                }
+               else if (command == 'anim'){
+                 res1 = res[1].split(',');
+                 animObject = res1[0];
+                 state = res1[1];
+                 i = getObjectIndexByName(animObject);
+                 g_GameObjectManager.gameObjects[i].isRunning = Boolean(state=='true');
+               }
             };
 
             // Retrieving data from model
@@ -68,7 +75,6 @@
                 i = g_GameObjectManager.pickHitbox(x, y);
                 g_GameObjectManager.selectObject(g_GameObjectManager.gameObjects[i].name);
                 name = g_GameObjectManager.gameObjects[i].name;
-                console.log(name);
                 $('span.object').each(function(index){
                   if ($(this).data('object') == name){
                     click_item($(this));

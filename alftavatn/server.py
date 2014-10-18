@@ -114,6 +114,7 @@ class TestHandler(tornado.websocket.WebSocketHandler):
     self.engine.print_buffer.connect(self.write)
     self.engine.model.model_changed.connect(self.write)
     self.engine.model.fov_changed.connect(self.write)
+    self.engine.model.animstate_changed.connect(self.write)
 
   def open(self, *args):
     print("open", "WebSocketChatHandler")

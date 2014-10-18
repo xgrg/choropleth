@@ -126,7 +126,7 @@ function VisualGameObject()
         this.startupGameObject(x, y, z);
         this.image = image;
         this.name = name;
-        if (w == undefined || h == undefined){
+        if (w == undefined && h == undefined){
            this.width = image.width;
            this.height = image.height;
         }
@@ -206,18 +206,21 @@ function AnimatedGameObject()
         @param frameCount The number of animation frames in the image
         @param fps The frames per second to animate this object at
     */
-    this.startupAnimatedGameObject = function(name, /**Image*/ image, /**Number*/ x, /**Number*/ y, /**Number*/ z, /**Number*/ frameCount, /**Number*/ fps)
+    this.startupAnimatedGameObject = function(name, /**Image*/ image, /**Number*/ x, /**Number*/ y, /**Number*/ z, /**Number*/ frameCount, /**Number*/ fps, w, h)
     {
         if (frameCount <= 0) throw "framecount can not be <= 0";
         if (fps <= 0) throw "fps can not be <= 0"
 
-        this.startupVisualGameObject(name, image, x, y, z);
+        this.startupVisualGameObject(name, image, x, y, z, w, h);
         this.currentFrame = 0;
         this.frameCount = frameCount;
         this.timeBetweenFrames = 1/fps;
         this.timeSinceLastFrame = this.timeBetweenFrames;
         this.frameWidth = this.image.width / this.frameCount;
         this.isRunning = true;
+        this.width = w;
+        this.height = h;
+        return this;
     }
 
     /**
@@ -230,7 +233,15 @@ function AnimatedGameObject()
     this.draw = function(/**Number*/ dt, /**CanvasRenderingContext2D*/ context, /**Number*/ xScroll, /**Number*/ yScroll)
     {
         var sourceX = this.frameWidth * this.currentFrame;
-        context.drawImage(this.image, sourceX, 0, this.frameWidth, this.image.height, this.x - xScroll, this.y - yScroll, this.frameWidth, this.image.height);
+        if (this.frameWidth == 0){
+           this.frameWidth = this.image.width / this.frameCount;
+        }
+        if (this.width == undefined || this.height == undefined){
+           context.drawImage(this.image, sourceX, 0, this.frameWidth, this.image.height, this.x - xScroll, this.y - yScroll, this.frameWidth, this.image.height);
+        }
+        else{
+           context.drawImage(this.image, sourceX, 0, this.frameWidth, this.image.height, this.x - xScroll, this.y - yScroll, this.width, this.height);
+        }
 
         if (this.isRunning == true){
            this.timeSinceLastFrame -= dt;
@@ -548,6 +559,14 @@ function assert(condition, message) {
         }
         throw message; // Fallback
     }
+}
+
+function getObjectIndexByName(name){
+   for (each in g_GameObjectManager.gameObjects){
+      if (g_GameObjectManager.gameObjects[each].name == name){
+         return each;
+      }
+   }
 }
 
 function removeVisualGameObjectByName(name){

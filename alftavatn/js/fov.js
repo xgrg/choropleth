@@ -9,13 +9,43 @@ function startupObject(fov, imobj){
             x = f[imobj]['x'];
             y = f[imobj]['y'];
             z = f[imobj]['z'];
-            if ('w' in f[imobj] && 'h' in f[imobj]){
-               w = f[imobj]['w'];
-               h = f[imobj]['h'];
-               g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, z, w, h);
+            if ('frame' in f[imobj] || 'running' in f[imobj]){
+                  // Animated sprite
+                  frame = f[imobj]['frame'];
+                  is_running = f[imobj]['running'];
+                  console.log(is_running);
+                  fc = f[imobj]['framecount'];
+                  fps = f[imobj]['fps'];
+
+
+                  if ('w' in f[imobj] && 'h' in f[imobj]){
+                     w = f[imobj]['w'];
+                     h = f[imobj]['h'];
+                     g_GameObjectManager.applicationManager.sprites[imobj] = new AnimatedGameObject().startupAnimatedGameObject(imobj, g_run2, x, y, z, fc, fps, w, h);
+                  }
+                  else{
+                     g_GameObjectManager.applicationManager.sprites[imobj] = new AnimatedGameObject().startupAnimatedGameObject(imobj, g_run2, x, y, z, fc, fps);
+                  }
+                  if (is_running == 'true'){
+                      g_GameObjectManager.applicationManager.gameObjects[imobj].isRunning = true;
+                  }
+                  else {
+                      g_GameObjectManager.applicationManager.sprites[imobj].isRunning = false;
+                      g_GameObjectManager.applicationManager.sprites[imobj].currentFrame = frame;
+                  }
+
+
             }
             else{
-               g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, z);
+                  // Visual static
+                  if ('w' in f[imobj] && 'h' in f[imobj]){
+                     w = f[imobj]['w'];
+                     h = f[imobj]['h'];
+                     g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, z, w, h);
+                  }
+                  else{
+                     g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, z);
+                  }
             }
 }
 
@@ -27,6 +57,7 @@ function fov_update(res){
          f = JSON.parse(fov);
          for (var each in f){
             imobj = each;
+            console.log('up',each);
             startupObject(fov, imobj);
 
          }
