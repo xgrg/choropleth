@@ -10,8 +10,18 @@ class IndexHandler(tornado.web.RequestHandler):
     self.model = engine.model
 
   def get(self):
-    #rules = ' <br/>'.join([tornado.web.escape.json_encode(e) for e in self.rules])
-    self.render("index2.html", model = self.model) #, canvas = self.model.get_canvas_cards())
+    error = False
+    if 'id' in self.request.arguments:
+       self.player_id = self.get_argument('id')
+       if self.player_id not in self.model.fov:
+          error = True
+    else:
+       error = True
+
+    if error:
+       self.write('Please define a correct id')
+    else:
+       self.render("index2.html", player_id = self.player_id) #, canvas = self.model.get_canvas_cards())
 
   def post(self):
       print self.request.arguments
@@ -32,10 +42,6 @@ class IndexHandler(tornado.web.RequestHandler):
           res = json.dumps(self.model.fov[self.get_argument('player_name')])
           print 'fov return', res
           self.write(res)
-#      elif 'refreshcanvas' in self.request.arguments:
-#          self.write(self.model.get_canvas_cards())
-#      elif 'refreshmodel' in self.request.arguments:
-#          self.write(self.model.get_model_cards())
       elif 'get_image_path' in self.request.arguments:
           self.write('static/data/' + self.model[self.get_argument('get_image_path')]['image'] + '.png')
 

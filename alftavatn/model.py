@@ -396,6 +396,7 @@ def create_world():
 
 
     p = Player(name = 'player')
+    p = Player(name = 'player1')
     p['location'] = 'home'
     u.apply_changes()
     u['player']['visible'] = ['explode','title']
