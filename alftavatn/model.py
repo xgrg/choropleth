@@ -61,6 +61,19 @@ class Universe(dict):
           self.fov[key] = value.get('visible', [])
       super(Universe, self).__setitem__(key, value)
 
+   def __get_sprites_infos__(self, visible):
+       ''' Returns image, position and zorder of a given sprite to be \
+        sent to client '''
+       item = {}
+       for each in visible:
+           image = self[each]['image']
+           pos =  self[each]['position']
+           z = self[each]['zorder']
+           item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'z':z}
+           if len(pos) == 4:
+               item[each].update({'w':pos[2], 'h':pos[3]})
+       return item
+
    def apply_changes(self):
        import json
        for k,v in self.changes.items():
@@ -76,16 +89,10 @@ class Universe(dict):
                  fovremoved = {}
                  print 'visible change'
                  visible = v['visible'][1]
-                 item = {}
-                 for each in visible:
-                    print each, self[each]
-                    image = self[each]['image']
-                    pos =  self[each]['position']
-                    item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'w': pos[2], 'h': pos[3]}
+                 item = self.__get_sprites_infos__(visible)
 
                  res = __diff_json__(self.fov[k], item)
-                 fovadded[k] = res[0]
-                 fovremoved[k] = res[1]
+                 fovadded[k], fovremoved[k] = res
                  self.fov[k] = item
                  self.fov_changed(json.dumps([fovadded, fovremoved]))
 
@@ -96,15 +103,10 @@ class Universe(dict):
                fovremoved = {}
                for viewer, fov in self.fov.items():
                    if k in fov:
-                       item = {}
                        visible = self[viewer]['visible']
-                       for each in visible:
-                           image = self[each]['image']
-                           pos = self[each]['position']
-                           item[each] = {'image': image, 'x': pos[0], 'y': pos[1], 'w': pos[2], 'h': pos[3]}
+                       item = self.__get_sprites_infos__(visible)
                        res = __diff_json__(self.fov[obj], item)
-                       fovadded[viewer] = res[0]
-                       fovremoved[viewer] = res[1]
+                       fovadded[viewer], fovremoved[viewer] = res
                        self.fov[viewer] = item
                print fovadded, fovremoved
                self.fov_changed(json.dumps([fovadded, fovremoved]))
@@ -218,12 +220,13 @@ class Viewer(Object):
               u.changes.setdefault(self.name, {}).update({'visible': (oldfov, self['visible'])})
 
 class Visual(Object):
-   def __init__(self, name, image, position=[0,0,0,0], properties={}):
+   def __init__(self, name, image, position=[0,0,0,0], zorder=0, properties={}):
       import os
       fn = os.path.join(os.path.dirname(__file__), 'data', '%s.png'%image)
       assert(os.path.isfile(fn))
       properties['image'] = image
       properties['position'] = position
+      properties['zorder'] = zorder
       Object.__init__(self, name, properties)
 
 class Player(Viewer):
@@ -326,9 +329,9 @@ def create_world():
     t = Timer(name = 'timer', interval=1, periodic=True)
     t.tick = Action(True, Consequence(print_internal_uptime))
 
-    Visual(name = 'cat', image = 'cat', position = [200,110,151,174])
-    Visual(name = 'pouf', image = 'pouf', position = [10,170,160,99])
-    Visual(name = 'lampe', image = 'lamp', position = [0,0,79,79])
+    Visual(name = 'cat', image = 'cat', position = [200,110]) #,151,174])
+    Visual(name = 'pouf', image = 'pouf', position = [10,170]) #,160,99])
+    Visual(name = 'lampe', image = 'lamp', position = [0,0]) #,79,79])
     Visual(name = 'porte', image = 'door1', position = [700,60,177,233])
     Visual(name = 'fenetre', image = 'window', position = [470,30,223,150])
     Visual(name = 'ventilateur', image = 'fan', position = [350,130,119,148])

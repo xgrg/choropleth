@@ -111,7 +111,7 @@ function VisualGameObject()
     */
     this.draw = function(/**Number*/ dt, /**CanvasRenderingContext2D*/ context, /**Number*/ xScroll, /**Number*/ yScroll)
     {
-        context.drawImage(this.image, this.x - xScroll, this.y - yScroll, this.width, this.height);
+         context.drawImage(this.image, this.x - xScroll, this.y - yScroll, this.width, this.height);
     }
 
     /**
@@ -126,8 +126,14 @@ function VisualGameObject()
         this.startupGameObject(x, y, z);
         this.image = image;
         this.name = name;
-        this.width = w;
-        this.height = h;
+        if (w == undefined || h == undefined){
+           this.width = image.width;
+           this.height = image.height;
+        }
+        else{
+           this.width = w;
+           this.height = h;
+        }
         return this;
     }
 

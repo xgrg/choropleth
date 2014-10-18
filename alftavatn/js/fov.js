@@ -1,4 +1,25 @@
 
+function startupObject(fov, imobj){
+            // Retrieves position from fov in json
+            var imname = $.ajax({type:"POST", url:"", data: {'get_image_path': imobj}, async:false} ).responseText;
+            var g_run2 = new Image();
+            g_run2.src = imname ;
+
+            f = JSON.parse(fov);
+            x = f[imobj]['x'];
+            y = f[imobj]['y'];
+            z = f[imobj]['z'];
+            if ('w' in f[imobj] && 'h' in f[imobj]){
+               w = f[imobj]['w'];
+               h = f[imobj]['h'];
+               g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, z, w, h);
+            }
+            else{
+               g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, z);
+            }
+}
+
+
 function fov_update(res){
       var fov = $.ajax({type:"POST", url:"", data: {'fov': 'True', 'player_name':player_id}, async:false} ).responseText;
       $("#fov").html(fov);
@@ -6,18 +27,8 @@ function fov_update(res){
          f = JSON.parse(fov);
          for (var each in f){
             imobj = each;
-            console.log(imobj);
+            startupObject(fov, imobj);
 
-            // Retrieves position from fov in json
-            f = JSON.parse(fov);
-            x = f[imobj]['x'];
-            y = f[imobj]['y'];
-            w = f[imobj]['w'];
-            h = f[imobj]['h'];
-            var imname = $.ajax({type:"POST", url:"", data: {'get_image_path': imobj}, async:false} ).responseText;
-            var g_run2 = new Image();
-            g_run2.src = imname ;
-            g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, 1, w,h);
          }
 
 
@@ -38,17 +49,8 @@ function fov_update(res){
 
          for (var each in diff[0][player_id]){
             imobj = diff[0][player_id][each];
+            startupObject(fov, imobj);
 
-            // Retrieves position from fov in json
-            f = JSON.parse(fov);
-            x = f[imobj]['x'];
-            y = f[imobj]['y'];
-            w = f[imobj]['w'];
-            h = f[imobj]['h'];
-            var imname = $.ajax({type:"POST", url:"", data: {'get_image_path': imobj}, async:false} ).responseText;
-            var g_run2 = new Image();
-            g_run2.src = imname ;
-            g_GameObjectManager.applicationManager.sprites[imobj] = new VisualGameObject().startupVisualGameObject(imobj, g_run2, x, y, 1, w, h);
          }
       }
 }
