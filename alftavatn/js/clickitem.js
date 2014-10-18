@@ -31,6 +31,7 @@ function click_action(clickedaction){
 }
 
 function fire_action(obj, action){
+    console.log('action', obj, action);
     var res = $.ajax({type:"POST", url:"", data: {'dialog': obj + ',' + action}, async:false} ).responseText;
     var res = $.ajax({type:"POST", url:"", data: {'send_action': 'True', 'action':action, 'object': obj}, async:false} ).responseText;
     var html = get_objects();
@@ -54,10 +55,12 @@ function click_item(clickeditem){
     var res = $.ajax({type:"POST", url:"", data: {'get_actions': 'True', 'object':obj}, async:false} ).responseText;
     res = res.split(',');
     var html = '';
+    console.log(obj);
     for (each in res){
         html = html + '<span style="border:solid black 1px;" class="action" data-object="'+ obj +'" data-action="'+res[each]+'">'+res[each]+'</span> '
         // if an action "click" exists, then fire it
         if (res[each] == 'click'){
+          console.log(obj, "click");
           fire_action(obj, "click");
         }
     }

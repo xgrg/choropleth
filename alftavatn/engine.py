@@ -28,17 +28,17 @@ class DialogSignal(Signal):
 class Engine():
    def __init__(self):
       self.actions = Queue()
-      self.print_buffer = DialogSignal()
+      self.print_buffer = Signal()
       self.is_running = False
       self.pending_prints = set()
 
-   def load_model(self, fp):
-      self.model = sm.Model(open(fp))
-      self.model.action_added.connect(self.add_action)
-      self.model.pending_print.connect(self.add_pending_print)
+#   def load_model(self, fp):
+#      self.model = sm.Model(open(fp))
+#      self.model.action_added.connect(self.add_action)
+#      self.model.pending_print.connect(self.add_pending_print)
 
-   def load_rules(self, fp):
-      self.rules = json.load(open(fp))
+#   def load_rules(self, fp):
+#      self.rules = json.load(open(fp))
 
    def add_action(self, action):
       self.actions.put(action)
@@ -64,7 +64,9 @@ class Engine():
       print 'apply prints'
       while self.pending_prints:
          item = self.pending_prints.pop()
-         self.print_buffer(str(item))
+         print self.print_buffer.__class__, type(self.print_buffer)
+         print self, type(self), item, type(item)
+         self.print_buffer('dialog@'+str(item))
 
    def apply_changes(self, verbose=True):
       def __diff_json__(j1, j2):
@@ -171,9 +173,10 @@ if __name__ == '__main__':
    #server.engine.load_model('/tmp/model.json')
    #server.engine.load_rules('/tmp/rules.json')
    #server.engine.apply_rules()
-   import model
-   model.create_world()
-   server.engine.model = model.u
+   from model import *
+   from data.catstory import *
+   create_world()
+   server.engine.model = u
    server.engine.model.pending_print.connect(server.engine.add_pending_print)
    server.engine.model.apply_prints.connect(server.engine.apply_prints)
    server.engine.model.apply_changes()

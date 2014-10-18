@@ -75,6 +75,7 @@
                 i = g_GameObjectManager.pickHitbox(x, y);
                 g_GameObjectManager.selectObject(g_GameObjectManager.gameObjects[i].name);
                 name = g_GameObjectManager.gameObjects[i].name;
+                console.log(name, 'is clicked');
                 $('span.object').each(function(index){
                   if ($(this).data('object') == name){
                     click_item($(this));

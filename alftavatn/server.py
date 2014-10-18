@@ -30,11 +30,10 @@ class IndexHandler(tornado.web.RequestHandler):
           act = self.get_argument('action')
           self.model.add_action("%s,%s"%(obj, act))
       elif 'get_objects' in self.request.arguments:
-           from alftavatn import get_objects
            objects = self.model.get_objects() #(self.model, self.rules)
+           print 'get_objects return', objects
            self.write(','.join(objects))
       elif 'get_actions' in self.request.arguments:
-           from alftavatn import get_actions
            obj = self.get_argument('object')
            actions = self.model.get_actions(obj)
            self.write(','.join(actions))
