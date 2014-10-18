@@ -220,7 +220,7 @@ class Viewer(Object):
               u.changes.setdefault(self.name, {}).update({'visible': (oldfov, self['visible'])})
 
 class Visual(Object):
-   def __init__(self, name, image, position=[0,0,0,0], zorder=0, properties={}):
+   def __init__(self, name, image, position=[0,0,0,0], zorder=1, properties={}):
       import os
       fn = os.path.join(os.path.dirname(__file__), 'data', '%s.png'%image)
       assert(os.path.isfile(fn))
@@ -297,7 +297,7 @@ def create_world():
 
 
     t = Title(name = 'title', image = 'title', position =  [0,0,900,300])
-    r = Room(name = 'room', image = 'room', position =  [0,0,900,300])
+    r = Room(name = 'room', image = 'room', zorder=0, position =  [0,0,900,300])
 
     def is_title():
        return u['player']['visible'] == ['title']
@@ -329,13 +329,13 @@ def create_world():
     t = Timer(name = 'timer', interval=1, periodic=True)
     t.tick = Action(True, Consequence(print_internal_uptime))
 
-    Visual(name = 'cat', image = 'cat', position = [200,110]) #,151,174])
-    Visual(name = 'pouf', image = 'pouf', position = [10,170]) #,160,99])
+    Visual(name = 'cat', image = 'cat', zorder=2,position = [200,110]) #,151,174])
+    Visual(name = 'pouf', image = 'pouf',  position = [10,170]) #,160,99])
     Visual(name = 'lampe', image = 'lamp', position = [0,0]) #,79,79])
     Visual(name = 'porte', image = 'door1', position = [700,60,177,233])
     Visual(name = 'fenetre', image = 'window', position = [470,30,223,150])
     Visual(name = 'ventilateur', image = 'fan', position = [350,130,119,148])
-    Visual(name = 'ronron', image = 'ronron', position = [220,110,122,30])
+    Visual(name = 'ronron', image = 'ronron', zorder=1, position = [220,110,122,30])
 
     Object(name = 'internal', properties={'uptime':0})
 

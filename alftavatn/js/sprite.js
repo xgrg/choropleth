@@ -512,8 +512,8 @@ function GameObjectManager()
     }
 
     this.pickHitbox = function(x, y){
-        best = -1;
-        best_z = -1;
+        best = -100;
+        best_z = -100;
         for (i in this.gameObjects){
             o = this.gameObjects[i];
             if (o.frameWidth){
