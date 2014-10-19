@@ -51,6 +51,7 @@ class Universe(dict):
 
    def add_action(self, action):
       self.actions.put(action)
+      print 'added action', action, self.is_running
       if not self.is_running:
          self.update_model()
 
@@ -67,6 +68,8 @@ class Universe(dict):
         sent to client '''
        item = {}
        for each in visible:
+           if 'image' not in self[each]:
+               print each
            image = self[each]['image']
            pos =  self[each]['position']
            z = self[each]['zorder']
@@ -113,11 +116,15 @@ class Universe(dict):
                    if k in fov:
                        visible = self[viewer]['visible']
                        item = self.__get_sprites_infos__(visible)
-                       res = __diff_json__(self.fov[obj], item)
+                       res = __diff_json__(self.fov[viewer], item)
                        fovadded[viewer], fovremoved[viewer] = res
                        self.fov[viewer] = item
                print fovadded, fovremoved
                self.fov_changed(json.dumps([fovadded, fovremoved]))
+           elif isinstance(self[k], Animated) and 'running' in v:
+               print 'animated event'
+               self.animstate_changed('%s,%s'%(k, str(v['running'][1]).lower()))
+
 
 
        self.apply_prints()
@@ -161,8 +168,8 @@ class Action(list):
 
       last_changes = u.changes
       while True:
-        for conditions, consequences in self:
-           print 'Checking conditions', conditions
+        for i, (conditions, consequences) in enumerate(self):
+           print 'Checking conditions', conditions, '(', i, 'of', len(self), ')'
            if conditions:
                print '* Conditions', conditions,'are satisfied...'
                consequences()
@@ -195,6 +202,17 @@ class Object(dict):
            print 'change', self.name, key, value
            u.changes.setdefault(self.name, {}).update({key : (self.get(key), value)})
            super(Object, self).__setitem__(key, value)
+
+   def __setattr__(self, attr, value):
+      if isinstance(value, Action):
+          old = getattr(self, attr, None)
+          if not old is None:
+              old.extend(value)
+              object.__setattr__(self, attr, old)
+          else:
+              object.__setattr__(self, attr, value)
+      else:
+          object.__setattr__(self, attr, value)
 
 class Viewer(Object):
    def __init__(self, name, properties={}):
@@ -250,11 +268,11 @@ class Animated(Visual):
 
     def start(self):
       self['running'] = True
-      self.state_changed('%s,true'%self.name)
+      #self.state_changed('%s,true'%self.name)
 
     def stop(self):
       self['running'] = False
-      self.state_changed('%s,false'%self.name)
+      #self.state_changed('%s,false'%self.name)
 
 
 class Player(Viewer):

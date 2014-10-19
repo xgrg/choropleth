@@ -21,7 +21,7 @@ class IndexHandler(tornado.web.RequestHandler):
     if error:
        self.write('Please define a correct id')
     else:
-       self.render("index2.html", player_id = self.player_id) #, canvas = self.model.get_canvas_cards())
+       self.render("minimal.html", player_id = self.player_id) #, canvas = self.model.get_canvas_cards())
 
   def post(self):
       print self.request.arguments

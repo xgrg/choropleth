@@ -174,7 +174,7 @@ if __name__ == '__main__':
    #server.engine.load_rules('/tmp/rules.json')
    #server.engine.apply_rules()
    from model import *
-   from data.catstory import *
+   from data.vincent import *
    create_world()
    server.engine.model = u
    server.engine.model.pending_print.connect(server.engine.add_pending_print)

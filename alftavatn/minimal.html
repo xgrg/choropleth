@@ -1,0 +1,111 @@
+
+<html>
+   <head>
+      <link href='http://fonts.googleapis.com/css?family=Roboto:100' rel='stylesheet' type='text/css'>
+
+      <meta charset="UTF-8">
+      <link rel="stylesheet" href="{{ static_url("styles/style.css") }}">
+
+      <script type="text/javascript" src="{{ static_url("js/jquery/jquery.min.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/clickitem.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/sprite.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/json.js") }}"></script>
+      <script type="text/javascript" src="{{ static_url("js/fov.js") }}"></script>
+      <script type="text/javascript">
+
+         // Canvas handling
+         var FPS = 30;
+         var SECONDS_BETWEEN_FRAMES = 1 / FPS * 1000;
+         var g_GameObjectManager = null;
+         var g_run = new Image();
+         var player_id = '{{player_id}}';
+         g_run.src = "{{static_url("data/run.png")}}";
+
+
+         $(document).ready(function(){
+            new GameObjectManager().startupGameObjectManager();
+
+            // Websocket handling
+            var ws = new WebSocket("ws://localhost:8000/websocket");
+            ws.onopen = function() {
+            };
+            ws.onmessage = function (evt) {
+               var res = evt.data;
+               res = res.split('@');
+               command = res[0];
+
+               // If the machine is sending a dialog, displays it
+               if (command == 'dialog'){
+                  $("#response").html($("#response").html() + "<br>" + res[1]);
+               }
+               // If a new field of view is received, updates the canvas
+               // For now, all fields of views are receiving unregarding the player id
+               else if (command == 'fov'){
+                  // Looking for changes in the new version
+                  fov_update(res);
+               }
+               else if (command == 'change'){
+                  $("#refreshmodel").click();
+               }
+               else if (command == 'anim'){
+                 res1 = res[1].split(',');
+                 animObject = res1[0];
+                 state = res1[1];
+                 i = getObjectIndexByName(animObject);
+                 g_GameObjectManager.gameObjects[i].isRunning = Boolean(state=='true');
+               }
+            };
+
+            // Retrieving data from model
+            var html = get_objects();
+            //console.log(html);
+            $('#objects').html(get_objects());
+            $("span.object").click(function(){
+               click_item($(this));
+            });
+
+
+            // Clicking on canvas
+            var can = document.getElementById('viewport'),
+                canLeft = can.offsetLeft,
+                canTop = can.offsetTop;
+            can.addEventListener('click', function(event) {
+                var x = event.pageX - canLeft,
+                    y = event.pageY - canTop;
+                i = g_GameObjectManager.pickHitbox(x, y);
+                g_GameObjectManager.selectObject(g_GameObjectManager.gameObjects[i].name);
+                name = g_GameObjectManager.gameObjects[i].name;
+                console.log(name, 'is clicked');
+                $('span.object').each(function(index){
+                  if ($(this).data('object') == name){
+                    click_item($(this));
+                  }
+                });
+
+            },false);
+
+
+            // First init of the fov
+            fov_update();
+
+         });
+   </script>
+   </head>
+
+
+   <body>
+      <div id="canvas"></div>
+      <canvas id="viewport" width=900 height=300></canvas>
+      <div id="fov" style="display:none">{}</div><br>
+      <div id="response"></div> <br>
+
+      <div id="objects" style="display:none;border:solid 1px black"> </div>
+      <br>
+      <div id="actions" style="display:none;border:solid 1px black"> </div>
+
+<br>
+(c) GO 2013
+<script>
+</script>
+
+</body></html>
