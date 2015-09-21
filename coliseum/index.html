@@ -56,7 +56,7 @@
                command = res[0];
                console.log(command);
                if (command == "DIALOG" || command == 'CHECKMEM'){
-                  $("#response").html($("#response").html() + "<br>" + res[1]);
+                  $("#response").html($("#response").html() + "\n" + res[1]);
                }
                else if (command == 'CANVAS'){
                   canvasData = res[1];
@@ -85,8 +85,10 @@
    </div>
    <br>
    <br>
-   <div id="response">
-   </div>
+   <textarea class="textarea" id="response" readonly="readonly"
+      style="overflow:auto; width:400px; font-family:arial" rows="15">
+   </textarea>
+
       <div>
       <input type="text" id="demo-input" name="blah" />
       <input id="tokensubmit" type="button" value="Submit" />
