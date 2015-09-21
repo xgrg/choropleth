@@ -3,6 +3,8 @@ import tornado.web
 import tornado.websocket
 import threading, os, string, json, time
 from tornado import gen
+import time
+from threading import Thread, Timer
 
 class IndexHandler(tornado.web.RequestHandler):
   def initialize(self):
@@ -17,7 +19,7 @@ class IndexHandler(tornado.web.RequestHandler):
 
 
 class TokenHandler(tornado.web.RequestHandler):
-    def initialize(self, engine=None):
+    def initialize(self):
         pass
 
     def get(self):
@@ -32,8 +34,24 @@ class LongPollingHandler(tornado.web.RequestHandler):
        pass
 
 class TestHandler(tornado.websocket.WebSocketHandler):
-  def initialize(self, engine):
+  def initialize(self):
     self.clients = []
+    self.pot = 0
+    self.pot2 = 3
+
+  def _decay(self):
+     self.pot = self.pot * 0.95
+     self.pot2 = self.pot2 * 0.75
+
+  def do_every (self, interval, worker_func, iterations = 0):
+     if iterations != 1:
+       threading.Timer (
+         interval,
+         self.do_every, [interval, worker_func, 0 if iterations == 0 else iterations-1]
+       ).start ()
+
+     worker_func ()
+
 
   def open(self, *args):
     print("open", "WebSocketChatHandler")
@@ -41,6 +59,15 @@ class TestHandler(tornado.websocket.WebSocketHandler):
 
   def on_message(self, message):
      print message
+     res = message.split('@')
+     if res[0] == 'DIALOG':
+        self.pot = len(res[1])
+        self.pot2 = len(res[1].split(' '))
+        self.write(message)
+        self.do_every(0.25, self._decay)
+     elif res[0] == 'SENSE':
+        print 'SENSE', res[1], res[2], getattr(self, res[2])
+        self.write('SENSE@%s@%s'%(res[1], getattr(self, res[2])))
 
   def on_close(self):
      self.clients.remove(self)
@@ -49,10 +76,4 @@ class TestHandler(tornado.websocket.WebSocketHandler):
       for each in self.clients:
           self.write_message(data)
 
-if __name__ == '__main__':
-    app = tornado.web.Application(handlers = [(r'/', IndexHandler), (r'/poll', LongPollingHandler), (r'/list_tokens', TokenHandler)],
-            static_path = homedir, autoescape = None)
-
-    app.listen(8000)
-    tornado.ioloop.IOLoop.instance().start()
 

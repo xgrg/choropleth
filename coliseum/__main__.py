@@ -10,7 +10,7 @@ class TornadoServer(web.Application):
 
    def start_thread(self):
       web.Application.__init__(self, handlers = [web.url(r'/', IndexHandler, kwargs={}),
-                                             web.url(r'/list_tokens', TokenHandler, kwargs={}),
+                                             #web.url(r'/list_tokens', TokenHandler, kwargs={}),
                                              web.url(r'/websocket', TestHandler, name='ws', kwargs={})],
                                              static_path = os.path.dirname(os.path.abspath(__file__)),
                                              autoescape = None)

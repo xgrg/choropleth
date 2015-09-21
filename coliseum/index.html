@@ -4,6 +4,64 @@
 
       <meta charset="UTF-8">
       <link rel="stylesheet" href="{{ static_url("css/style.css") }}">
+      <script src="{{ static_url("./js/jquery-2.1.4.min.js") }}"></script>
+      <script src="{{ static_url("./js/jquery.canvasjs.min.js") }}"></script>
+      <script src="{{ static_url("./js/chart.js") }}"></script>
+      <script type="text/javascript">
+         $(document).ready(function(){
+
+            // Websocket and textbox
+
+            var ws = new WebSocket("ws://localhost:8000/websocket");
+
+            $("input[type=button]#tokensubmit").click(function () {
+               var items = $(this).siblings("input[type=text]").val();
+               ws.send("DIALOG@" + items);
+               $("#demo-input").val('');
+            });
+
+            $("#demo-input").keypress(function(event) {
+                if (event.which == 13) {
+                  event.preventDefault();
+                  $("input[type=button]#tokensubmit").click();
+                }
+                else if (event.which == 9){
+                  event.preventDefault();
+                }
+            });
+
+            charts = { chartContainer : new Chart({ name : 'chartContainer',
+                                    text : 'Live',
+                                    sensevar : 'pot',
+                                    websocket : ws }),
+                       chartContainer2 : new Chart({ name : 'chartContainer2',
+                                     text : 'Live 2',
+                                     sensevar : 'pot2',
+                                     websocket : ws})};
+            charts['chartContainer'].render();
+            charts['chartContainer2'].render();
+
+            charts['chartContainer'].start();
+            charts['chartContainer2'].start();
+
+
+            ws.onmessage = function (evt) {
+               var res = evt.data;
+               res = res.split('@');
+               command = res[0];
+               console.log(command);
+               if (command == "DIALOG"){
+                  $("#response").html($("#response").html() + "<br>" + res);
+               }
+               else if (command == "SENSE"){
+                  charts[res[1]].push(parseFloat(res[2]));
+               }
+            };
+
+
+         });
+
+      </script>
 
       <script type="text/javascript">
       </script>
@@ -12,5 +70,19 @@
 
    <body>
    <br>
+   <div style="display:inline">
+      <div id="chartContainer" style="float:right; height: 300px; width:400px;">
+      </div>
+      <div id="chartContainer2" style="float:right; height: 300px; width:400px;">
+      </div>
+   </div>
+   <br>
+   <br>
+   <div id="response">
+   </div>
+      <div>
+      <input type="text" id="demo-input" name="blah" />
+      <input id="tokensubmit" type="button" value="Submit" />
+      </div>
    </body>
 </html>
