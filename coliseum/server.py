@@ -33,25 +33,14 @@ class LongPollingHandler(tornado.web.RequestHandler):
     def post(self):
        pass
 
+
+from model import Model
+
 class TestHandler(tornado.websocket.WebSocketHandler):
   def initialize(self):
     self.clients = []
-    self.pot = 0
-    self.pot2 = 3
-
-  def _decay(self):
-     self.pot = self.pot * 0.95
-     self.pot2 = self.pot2 * 0.75
-
-  def do_every (self, interval, worker_func, iterations = 0):
-     if iterations != 1:
-       threading.Timer (
-         interval,
-         self.do_every, [interval, worker_func, 0 if iterations == 0 else iterations-1]
-       ).start ()
-
-     worker_func ()
-
+    self.model = Model()
+    self.model.run()
 
   def open(self, *args):
     print("open", "WebSocketChatHandler")
@@ -61,13 +50,13 @@ class TestHandler(tornado.websocket.WebSocketHandler):
      print message
      res = message.split('@')
      if res[0] == 'DIALOG':
-        self.pot = len(res[1])
-        self.pot2 = len(res[1].split(' '))
-        self.write(message)
-        self.do_every(0.25, self._decay)
+         self.model.perceive(res[1])
+         self.write(message)
      elif res[0] == 'SENSE':
-        print 'SENSE', res[1], res[2], getattr(self, res[2])
-        self.write('SENSE@%s@%s'%(res[1], getattr(self, res[2])))
+        print 'SENSE', res[1], res[2], self.model.sense(res[2])
+        self.write('SENSE@%s@%s'%(res[1], self.model.sense(res[2])))
+     elif res[0] == 'CHECKMEM':
+        self.write('CHECKMEM@%s'%str(self.model.mem.memory))
 
   def on_close(self):
      self.clients.remove(self)

@@ -31,12 +31,12 @@
             });
 
             charts = { chartContainer : new Chart({ name : 'chartContainer',
-                                    text : 'Live',
+                                    text : 'pot',
                                     sensevar : 'pot',
                                     websocket : ws }),
                        chartContainer2 : new Chart({ name : 'chartContainer2',
-                                     text : 'Live 2',
-                                     sensevar : 'pot2',
+                                     text : 'novelty',
+                                     sensevar : 'novelty',
                                      websocket : ws})};
             charts['chartContainer'].render();
             charts['chartContainer2'].render();
@@ -44,14 +44,15 @@
             charts['chartContainer'].start();
             charts['chartContainer2'].start();
 
+            setInterval(function(){ws.send('CHECKMEM');}, 2000);
 
             ws.onmessage = function (evt) {
                var res = evt.data;
                res = res.split('@');
                command = res[0];
                console.log(command);
-               if (command == "DIALOG"){
-                  $("#response").html($("#response").html() + "<br>" + res);
+               if (command == "DIALOG" || command == 'CHECKMEM'){
+                  $("#response").html($("#response").html() + "<br>" + res[1]);
                }
                else if (command == "SENSE"){
                   charts[res[1]].push(parseFloat(res[2]));
