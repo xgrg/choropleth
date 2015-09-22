@@ -39,10 +39,9 @@ from model import Model
 class TestHandler(tornado.websocket.WebSocketHandler):
   def initialize(self):
     self.clients = []
-    self.canvas = [[0.4, 0.3],
-                   [0.1, 0.2]]
     self.model = Model()
     self.model.run()
+    self.model.action = self.write
 
   def open(self, *args):
     print("open", "WebSocketChatHandler")
@@ -59,8 +58,6 @@ class TestHandler(tornado.websocket.WebSocketHandler):
         self.write('SENSE@%s@%s@%s'%(res[1], res[2], self.model.sense(res[2])))
      elif res[0] == 'CHECKMEM':
         self.write('CHECKMEM@%s'%str(self.model.mem.memory))
-
-        #self.write('CANVAS@%s'%str(json.dumps(self.canvas)))
 
   def on_close(self):
      self.clients.remove(self)

@@ -55,20 +55,32 @@ class MemoryModule(Periodic):
         self.novelty = self.novelty * 0.95
 
 
-class DecisionModule():
-    def __init__(self):
-        pass
+class DecisionModule(Periodic):
+    def __init__(self, model):
+        Periodic.__init__(self)
+        self.model = model
+        self.noise = 0
+        self.effection = 0
+
+    def update(self):
+        import numpy as np
+        self.noise = np.random.normal(0,1,1)[0]
+        self.effection = self.effection * 0.95
+        if self.noise > 2.1:
+           self.effection = 1
+           self.model.action('EFFECTION@toto')
 
 
 class Model():
     def __init__(self, **kwargs):
         self.per = PerceptionModule(self)
         self.mem = MemoryModule(self)
-        self.dec = DecisionModule()
+        self.dec = DecisionModule(self)
 
     def run(self):
         self.per.run()
         self.mem.run()
+        self.dec.run()
 
     def sense(self, name):
        n = 0
