@@ -5,7 +5,7 @@ function getData(charts){
       obj = charts[key].data;
       for (var j in obj){
          data.push([]);
-         for (k in obj[j].dataPoints) {
+         for (var k in obj[j].dataPoints) {
             data[i].push(obj[j].dataPoints[k].y);
          }
          i++;
@@ -52,13 +52,32 @@ function normalize_per_chart(data){
     return res;
 }
 
+function keep_last(data, number){
+    number = number | 100;
+
+    res = [];
+    var i=0;
+    data.forEach(function (row, row_index) {
+      res.push([]);
+      row.forEach(function (entry, column_index) {
+         if (column_index > row.length - number) {
+            res[i].push(entry);
+         }
+      });
+      i++;
+    });
+    return res;
+
+}
+
 
 function drawCanvas(charts) {
     var the_color = "rgba(0,0,255,alpha_token)";
     // ask for the json and register the following
     // function (second argument to getJSON) to be called
     // once it is delivered:
-    data = normalize_per_chart(getData(charts));
+    //data = normalize_per_chart(getData(charts));
+    data = keep_last(normalize(getData(charts)), 100);
     //data = $.parseJSON(jsonstring); //, function(data) {
     console.log(data);
     // no more jquery for now
