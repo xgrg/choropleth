@@ -56,7 +56,7 @@ class TestHandler(tornado.websocket.WebSocketHandler):
          self.write(message)
      elif res[0] == 'SENSE':
         print 'SENSE', res[1], res[2], self.model.sense(res[2])
-        self.write('SENSE@%s@%s'%(res[1], self.model.sense(res[2])))
+        self.write('SENSE@%s@%s@%s'%(res[1], res[2], self.model.sense(res[2])))
      elif res[0] == 'CHECKMEM':
         self.write('CHECKMEM@%s'%str(self.model.mem.memory))
 

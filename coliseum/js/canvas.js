@@ -2,12 +2,14 @@ function getData(charts){
    data = [];
    i = 0
    for (key in charts) {
-      data.push([]);
       obj = charts[key].data;
-      for (k in obj) {
-         data[i].push(obj[k].y);
+      for (var j in obj){
+         data.push([]);
+         for (k in obj[j].dataPoints) {
+            data[i].push(obj[j].dataPoints[k].y);
+         }
+         i++;
       }
-      i++;
    };
    return data;
 }
@@ -73,10 +75,16 @@ function drawCanvas(charts) {
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.font = "8px Arial";
     radius = column_width / 2;
+    labels = [];
+    for (var i in charts){
+        for (var j in charts[i].data){
+           labels.push(charts[i].data[j].legendText);
+        }
+    }
     data.forEach(function (row, row_index) {
       y_pos = row_index * 2*radius + radius;
       context.strokeStyle = "rgb(0,0,0)";
-      context.strokeText(Object.keys(charts)[row_index],0,y_pos+2);
+      context.strokeText(labels[row_index],0,y_pos+2);
       row.forEach(function (entry, column_index) {
         x_pos = column_index * column_width + radius + margin_width;
         context.moveTo(x_pos, y_pos);

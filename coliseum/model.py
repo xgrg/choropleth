@@ -77,9 +77,9 @@ class Model():
              n = n + 1
              val = getattr(each, name)
        if n == 0:
-          raise Exception('%s not found')
+          raise Exception('%s not found'%name)
        elif n != 1:
-          raise Exception('%s found multiple times')
+          raise Exception('%s found multiple times'%name)
        return val
 
     def perceive(self, p):

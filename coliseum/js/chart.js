@@ -10,19 +10,38 @@ function Chart(params){
    this.dataLength = params.dataLength || 500;
 
    this.data = [];
+   for (var i in params.sensevar){
+      this.data.push({
+         type:'spline',
+         showInLegend: true,
+         xVal:0,
+         legendText: params.sensevar[i],
+         dataPoints: []
+      });
+   }
+
 
    this.chart = new CanvasJS.Chart(this.name, {
       title :{
+         animationEnabled: true,
+
          text: text
       },
-      data: [{
-         type: "line",
-         dataPoints: this.data
-      }]
+      data: this.data,
+      legend: {
+         cursor: "pointer",
+         itemclick: function (e) {
+            if (typeof(e.dataSeries.visible) === "undefined" || e.dataSeries.visible) {
+               e.dataSeries.visible = false;
+            } else {
+               e.dataSeries.visible = true;
+         }
+         chart.render();
+         }
+      }
    });
    this.render = this.chart.render;
 
-   this.xVal = 0;
 
    this.updateChart = function () {
 
@@ -33,7 +52,9 @@ function Chart(params){
          return;
       }
 
-      this.websocket.send("SENSE@" + this.name + '@' + this.sensevar);
+      for (var i in this.sensevar){
+         this.websocket.send("SENSE@" + this.name + '@' + this.sensevar[i]);
+      }
       if (this.data.length > this.dataLength)
       {
          this.data.shift();
@@ -41,12 +62,21 @@ function Chart(params){
       this.render();
 
    };
-   this.push = function(val) {
-      this.data.push({
-            x:this.xVal,
-            y:val
-            });
-      this.xVal++;
+   this.push = function(val, dataset) {
+      if (dataset === undefined && this.data.length != 1) {
+         console.log('dataset should be precised if this.data.length is > 1');
+         return;
+      }
+      for (var i in this.data){
+         if (this.data[i].legendText == dataset || dataset === undefined) {
+            this.data[i].dataPoints.push({
+                  x:this.data[i].xVal++,
+                  y:val
+                  });
+
+         }
+
+      }
    }
    this.start = function() {
       // update chart after specified time.

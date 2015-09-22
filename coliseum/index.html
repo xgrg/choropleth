@@ -33,11 +33,11 @@
 
             charts = { chartContainer : new Chart({ name : 'chartContainer',
                                     text : 'pot',
-                                    sensevar : 'pot',
+                                    sensevar : ['pot', 'novelty'],
                                     websocket : ws }),
                        chartContainer2 : new Chart({ name : 'chartContainer2',
                                      text : 'novelty',
-                                     sensevar : 'novelty',
+                                     sensevar : ['novelty'],
                                      websocket : ws})};
             charts['chartContainer'].render();
             charts['chartContainer2'].render();
@@ -64,7 +64,7 @@
                   canvasData = res[1];
                }
                else if (command == "SENSE"){
-                  charts[res[1]].push(parseFloat(res[2]));
+                  charts[res[1]].push(parseFloat(res[3]), res[2]);
                }
             };
 
