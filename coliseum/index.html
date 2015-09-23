@@ -12,19 +12,25 @@
          $(document).ready(function(){
 
             // Websocket and textbox
+            function isLetterOrDigit(str) {
+              return (str>=65 && str<=90) || (str>=97 && str <= 122) || (str==13 || str==32);
+            }
 
             var ws = new WebSocket("ws://localhost:8000/websocket");
 
             $("input[type=button]#tokensubmit").click(function () {
                var items = $(this).siblings("input[type=text]").val();
                ws.send("DIALOG@" + items);
-               $("#demo-input").val('');
             });
 
             $("#demo-input").keypress(function(event) {
-                if (event.which == 13) {
+                if (isLetterOrDigit(event.which)) {
+                  ws.send("DIALOG@"+ event.which);
+                }
+                if (event.which == 13){
                   event.preventDefault();
-                  $("input[type=button]#tokensubmit").click();
+                  //$("input[type=button]#tokensubmit").click();
+                  $("#demo-input").val('');
                 }
                 else if (event.which == 9){
                   event.preventDefault();
@@ -56,12 +62,12 @@
                console.log(command);
                if (command == "DIALOG"){
                   element = $("#response");
-                  element.html(element.html() + "\n" + res[1]);
+                  element.html(element.html() + String.fromCharCode(res[1]));
                   element.scrollTop(element[0].scrollHeight);
                }
                else if (command == "EFFECTION"){
                   element = $("#response");
-                  element.html(element.html() + "\n>> " + res[1]);
+                  element.html(element.html() + "\n>> " + res[1]+ "\n");
                   element.scrollTop(element[0].scrollHeight);
                }
                else if (command == 'CHECKMEM'){
