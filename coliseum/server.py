@@ -48,7 +48,7 @@ class TestHandler(tornado.websocket.WebSocketHandler):
     self.clients.append(self)
 
   def on_message(self, message):
-     print message
+     #print message
      res = message.split('@')
      if res[0] == 'DIALOG':
          self.model.perceive(chr(int(res[1])))

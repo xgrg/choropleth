@@ -35,8 +35,8 @@ function Chart(params){
                e.dataSeries.visible = false;
             } else {
                e.dataSeries.visible = true;
-         }
-         chart.render();
+            }
+         this.chart.render();
          }
       }
    });
@@ -77,6 +77,31 @@ function Chart(params){
          }
 
       }
+   }
+   this.replaceData = function(data, dataset) {
+      if (dataset === undefined && this.data.length != 1) {
+         console.log('dataset should be precised if this.data.length is > 1');
+         return;
+      }
+      for (var i in this.data){
+         if (this.data[i].legendText == dataset || dataset === undefined) {
+            res = data.split('), (');
+            this.data[i].dataPoints = [];
+            for (var j in res){
+               p = res[j].split(',');
+               this.data[i].dataPoints.push({
+                  x: parseFloat(p[0]),
+                  y: parseFloat(p[1])
+               });
+            }
+
+            //this.data[i].dataPoints.push({
+            //      });
+
+         }
+
+      }
+
    }
    this.start = function() {
       // update chart after specified time.

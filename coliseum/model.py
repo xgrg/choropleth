@@ -1,4 +1,7 @@
 import threading
+import numpy as np
+import scipy.fftpack
+import scipy.signal
 from Queue import Queue
 
 class Periodic():
@@ -22,7 +25,10 @@ class PerceptionModule(Periodic):
         Periodic.__init__(self)
         self._buffer = Queue()
         self.pot = 0
-        self.pot2 = 0
+        self.pots = []
+        self.fft = []
+        self.peaks = []
+
         self.model = model
 
 
@@ -33,6 +39,20 @@ class PerceptionModule(Periodic):
            self.pot = len(g)
            self.model.recall(g)
            self.model.memorize(g)
+
+        self.pots.append(self.pot)
+        self.pots = self.pots[-100:]
+        #print self.pots
+        yf = scipy.fftpack.fft(self.pots)
+        xf = np.linspace(0.0, 1.0/(2.0*0.25), len(self.pots)/2)
+        if (len(self.pots) > 10):
+           self.fft = zip(xf,2.0/len(self.pots) * np.abs(yf[0:len(self.pots)/2]))
+           peaks = scipy.signal.find_peaks_cwt(2.0/len(self.pots) * np.abs(yf[0:len(self.pots)/2]), np.arange(1,5))
+           self.peaks = np.zeros(len(xf))
+           for each in peaks:
+               self.peaks[each] = 10 * self.fft[each][1]
+           self.peaks = zip(xf, self.peaks)
+           print peaks #(self.fft)
 
     def push(self, data):
         self._buffer.put(data)

@@ -79,7 +79,6 @@ function drawCanvas(charts) {
     //data = normalize_per_chart(getData(charts));
     data = keep_last(normalize(getData(charts)), 100);
     //data = $.parseJSON(jsonstring); //, function(data) {
-    console.log(data);
     // no more jquery for now
     var canvas = document.getElementById("circles");
     // you declare these to avoid them being global variables:
