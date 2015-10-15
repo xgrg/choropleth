@@ -1,0 +1,21 @@
+
+@media screen {
+   td { width: 80px;
+        height: 80px;
+        border: 1px solid black;
+        font-size: 12px; }
+
+   body {
+       background:#ddd;
+       font-family:Roboto, Sans-serif;
+       font-size:14px;
+       margin:0;
+       padding:10px 10px 0 10px;
+       height:100%;
+       color:#333;
+       width:1200px;
+       margin:0 auto;
+       background-repeat:cover;
+       background-image: url();
+       background-color:#deeae5;
+   }
