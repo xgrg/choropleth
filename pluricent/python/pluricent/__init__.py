@@ -3,37 +3,7 @@
 import base
 Base = base.Base
 
-def initialize_database(fn = 'pluricent.db', datasource = 'pluricent/'):
-    ''' Initializes a sqlite database with empty tables e.g. Action, Study, Subject, Center, Scanner, T1Image '''
-    import os.path as osp
-    import os
-    from sqlalchemy import create_engine
-    from sqlalchemy.orm import sessionmaker
-
-    assert(osp.exists(datasource) and len(os.listdir(datasource)) == 0)
-
-    print 'deleting all contents from %s'%fn
-    engine = create_engine('sqlite:///%s'%fn, encoding='utf-8')
-    print '  0', Base.metadata.tables
-    Base.metadata.bind = engine
-    print '  1', Base.metadata.tables
-    Base.metadata.reflect()
-    print '  2', Base.metadata.tables
-    Base.metadata.drop_all()
-    Base.metadata.clear()
-    print '  3', Base.metadata.tables
-
-    from models import General, Study, Subject, Action, Center, Scanner, T1Image
-    Base.metadata.create_all()
-    print '  4', Base.metadata.tables
-
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-    new_general = General(key='datasource', value=datasource)
-    session.add(new_general)
-    session.commit()
-    return engine
-
+from models import initialize_database
 
 def create_engine(fn = 'pluricent.db'):
     #FIXME check that fn is a filename and it exists
