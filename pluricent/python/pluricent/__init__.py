@@ -1,30 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-import base
-Base = base.Base
-
-from models import initialize_database
-
-def create_engine(fn = 'pluricent.db'):
-    #FIXME check that fn is a filename and it exists
-    from sqlalchemy import create_engine
-    engine = create_engine('sqlite:///%s'%fn, encoding='utf-8')
-    return engine
-
-def create_session(fn = 'pluricent.db'):
-    engine = create_engine(fn)
-    Base.metadata.bind = engine
-    Base.metadata.reflect()
-    from sqlalchemy.orm import sessionmaker
-    DBSession = sessionmaker(bind=engine)
-    session = DBSession()
-    return session
+import base, inspect
+from models import initialize_database, create_session
 
 
 def add_study(session, name, description_file=None, readme_file=None):
     import os.path as osp
-    import os
-    from pluricent.models import Study
+    import os, models
     ds = datasource(session)
     assert(osp.isdir(ds))
     s = studies(session)
@@ -32,7 +14,7 @@ def add_study(session, name, description_file=None, readme_file=None):
     assert(not osp.exists(osp.join(ds, directory)))
     os.mkdir(osp.join(ds, directory))
 
-    new_study = Study(id=(len(s)+1), name=name, directory=directory, \
+    new_study = models.Study(id=(len(s)+1), name=name, directory=directory, \
         description_file=description_file, readme_file=readme_file)
 
     session.add(new_study)
@@ -70,11 +52,12 @@ def add_center(session, name, location=None):
     session.commit()
 
 def studies(session):
-    from pluricent.models import Study
-    return [each.name for each in session.query(Study).all()]
+    import models
+    return [each.name for each in session.query(models.Study).all()]
 
 def datasource(session):
-    from pluricent.models import General
+    import models
+    General = models.General
     return session.query(General.value).filter(General.key=='datasource').one()[0]
 
 def add_t1image(session, path, study, subject):
@@ -98,6 +81,21 @@ def make_actions(session, actions):
 
         if a[0] == 'add_study':
             add_study(session, a[1])
+
+
+def populate_from_directory(directory, fn = 'pluricent.db'):
+    unknown = []
+    import os
+    import os.path as osp
+    from brainvisa import checkbase as cb
+    cl = cb.CloudyCheckbase(directory)
+    actions = []
+
+    for root, dirs, files in os.walk(directory):
+        for each in dirs:
+            d = osp.join(root, each)
+#            cb.parsefilepath(
+
 
 
 
