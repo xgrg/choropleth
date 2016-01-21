@@ -1,8 +1,5 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-
-from sqlalchemy import Column, ForeignKey, Integer, String, Float
-from sqlalchemy.orm import relationship
 import base
 Base = base.Base
 
@@ -10,20 +7,26 @@ def initialize_database(fn = 'pluricent.db', datasource = 'pluricent/'):
     ''' Initializes a sqlite database with empty tables e.g. Action, Study, Subject, Center, Scanner, T1Image '''
     import os.path as osp
     import os
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
 
     assert(osp.exists(datasource) and len(os.listdir(datasource)) == 0)
 
     print 'deleting all contents from %s'%fn
-    from sqlalchemy import create_engine, Table
     engine = create_engine('sqlite:///%s'%fn, encoding='utf-8')
+    print '  0', Base.metadata.tables
     Base.metadata.bind = engine
+    print '  1', Base.metadata.tables
     Base.metadata.reflect()
+    print '  2', Base.metadata.tables
     Base.metadata.drop_all()
     Base.metadata.clear()
+    print '  3', Base.metadata.tables
 
     from models import General, Study, Subject, Action, Center, Scanner, T1Image
     Base.metadata.create_all()
-    from sqlalchemy.orm import sessionmaker
+    print '  4', Base.metadata.tables
+
     DBSession = sessionmaker(bind=engine)
     session = DBSession()
     new_general = General(key='datasource', value=datasource)
@@ -48,7 +51,7 @@ def create_session(fn = 'pluricent.db'):
     return session
 
 
-def add_study(session, name):
+def add_study(session, name, description_file=None, readme_file=None):
     import os.path as osp
     import os
     from pluricent.models import Study
@@ -59,7 +62,8 @@ def add_study(session, name):
     assert(not osp.exists(osp.join(ds, directory)))
     os.mkdir(osp.join(ds, directory))
 
-    new_study = Study(id=(len(s)+1), name=name, directory=directory)
+    new_study = Study(id=(len(s)+1), name=name, directory=directory, \
+        description_file=description_file, readme_file=readme_file)
 
     session.add(new_study)
     session.commit()

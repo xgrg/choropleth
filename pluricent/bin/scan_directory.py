@@ -59,9 +59,9 @@ def scandir_BVdatabase(studydir):
         for each in v:
            fp = cb.getfilepath(k, each)
            if osp.isfile(fp):
-              if k == 'raw':
+              if k in ['raw', 'nobias'] :
                  print fp, 'identified as', k
-                 actions.append(('add_image', subject, fp))
+                 actions.append(('add_image', subject, k, fp, each))
     return actions
 
 
@@ -74,15 +74,25 @@ def scandir_BVdatabase(studydir):
     print size_to_human(cumulative_size)
 
 
-def move_raw(actions, destdir):
+def move_to_cloud_hierarchy(actions, destdir):
     import os.path as osp
-    import os,shutil
+    import os, shutil
+    from brainvisa import checkbase as cb
+
+    cl = cb.CloudyCheckbase(destdir)
+
     assert(osp.exists(destdir))
 
-    for k, subject, fp in actions:
+    for a in actions:
+        k, v = a[0], a[1:]
         if k=='add_image':
-            d = osp.join(destdir,subject,'anatomy')
-            os.makedirs(d)
-            os.system('cp %s %s'%(fp, ))
+            subject, datatype, fp, att = v
+            d = osp.join(destdir, subject, 'anatomy')
+            #os.makedirs(d)
+            #os.system('cp %s %s'%(fp, ))
+            att.update({'database': destdir, 'number': '001'})
+            d2 = cb.getfilepath('t1raw', att, patterns=cl.patterns)
+            print 'cp %s %s'%(fp, d2)
+
 
 

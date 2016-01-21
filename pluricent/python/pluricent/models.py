@@ -15,6 +15,8 @@ class Study(Base):
   id = Column(Integer, primary_key=True)
   name = Column(String(25), nullable=False, unique=True)
   directory = Column(String(100), nullable=False, unique=True)
+  description_file = Column(String(100))
+  readme_file = Column(String(100))
 
 class Subject(Base):
   __tablename__ = 'subject'
@@ -56,4 +58,5 @@ class T1Image(Base):
   quality_score = Column(Integer, doc="General quality score summarizing all various aspects of the image")
   subject = relationship(Subject)
   scanner = relationship(Scanner)
+  comments = Column(String(100))
   path = Column(String(100), nullable=False, unique=True)
