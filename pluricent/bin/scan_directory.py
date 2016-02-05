@@ -99,7 +99,29 @@ def move_mapt_to_cloud_hierarchy(actions, destdir):
             os.system('cp %s %s'%(fp, d2))
             print 'cp %s %s'%(fp, d2)
 
+def check_pushzone(pzdir, destdir):
+    from brainvisa import checkbase as cb
+    cl = cb.CloudyCheckbase(pzdir)
+    import os
+    import os.path as osp
+    unknown = []
+    already_existing = []
 
+    for root, dirs, files in os.walk(pzdir):
+        for f in files:
+            fp = osp.join(root, f)
+            print fp
+            res = cb.parsefilepath(fp, cl.patterns)
+            if res is None:
+               unknown.append(fp)
+            else:
+               datatype, att = res
+               att['database'] = destdir
+               fp = cb.getfilepath(datatype, att, cl.patterns)
+               if osp.exists(fp):
+                  already_existing.append(fp)
+
+    return unknown, already_existing
 
 def collect_dwi():
     dd = '/neurospin/cati/MEMENTO/DiffusionMRI/'
