@@ -54,6 +54,7 @@ class T1Image(Base):
   id = Column(Integer, primary_key=True)
   subject_id = Column(Integer, ForeignKey('subject.id'), nullable=False)
   acquisition_date = Column(String(10))
+  timepoint = Column(String(10))
   scanner_id = Column(Integer, ForeignKey('scanner.id'))
   quality_report = Column(String(25))
   quality_score = Column(Integer, doc="General quality score summarizing all various aspects of the image")
