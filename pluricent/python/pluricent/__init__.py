@@ -24,7 +24,7 @@ def add_subjects(session, subjects, study):
     import os.path as osp
     import os
     from pluricent.models import Study, Subject
-    ds = datasource(session) 
+    ds = datasource(session)
     study_id = study_id(session, study)
     studydir = session.query(Study.directory).filter(Study.id==study_id).one()[0]
     assert(osp.isdir(osp.join(ds, studydir)))
@@ -43,7 +43,7 @@ def study_id(session, study):
 def subject_id(session, study_name, identifier):
     from models import Subject
     return session.query(Subject.id).filter(Subject.identifier==identifier).one()[0]
-    
+
 
 def add_center(session, name, location=None):
     #FIXME check if location is provided
@@ -87,7 +87,7 @@ def populate_from_directory(directory, fn = 'pluricent.db'):
     unknown = []
     import os
     import os.path as osp
-    from brainvisa import checkbase as cb
+    from pluricent import checkbase as cb
     cl = cb.CloudyCheckbase(directory)
     actions = []
 
