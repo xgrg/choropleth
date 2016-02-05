@@ -123,6 +123,29 @@ def check_pushzone(pzdir, destdir):
 
     return unknown, already_existing
 
+
+def push_to_repo(pzdir, destdir):
+    unknown, already_existing = check_pushzone(pzdir, destdir)
+    from brainvisa import checkbase as cb
+    cl = cb.CloudyCheckbase(pzdir)
+    if len(unknown) == 0 and len(already_existing) == 0:
+       print 'pushzone ok'
+       import os
+       import os.path as osp
+       for root, dirs, files in os.walk(pzdir):
+          for f in files:
+             fp = osp.join(root, f)
+             res = cb.parsefilepath(fp, cl.patterns)
+             datatype, att = res
+             att['database'] = destdir
+             fp2 = cb.getfilepath(datatype, att, cl.patterns)
+             print 'cp %s %s'%(fp, fp2)
+
+    else:
+       print 'pushzone errors'
+       print 'unknown', unknown
+       print 'already_existing', already_existing
+
 def collect_dwi():
     dd = '/neurospin/cati/MEMENTO/DiffusionMRI/'
     from glob import glob
