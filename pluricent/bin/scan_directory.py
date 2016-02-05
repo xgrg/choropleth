@@ -74,24 +74,29 @@ def scandir_BVdatabase(studydir):
     print size_to_human(cumulative_size)
 
 
-def move_to_cloud_hierarchy(actions, destdir):
+def move_mapt_to_cloud_hierarchy(actions, destdir):
     import os.path as osp
     import os, shutil
     from brainvisa import checkbase as cb
-
+    csv = ['']
     cl = cb.CloudyCheckbase(destdir)
 
     assert(osp.exists(destdir))
 
-    for a in actions:
+    for a in actions[0:10]:
         k, v = a[0], a[1:]
         if k=='add_image':
             subject, datatype, fp, att = v
             d = osp.join(destdir, subject, 'anatomy')
-            #os.makedirs(d)
-            #os.system('cp %s %s'%(fp, ))
-            att.update({'database': destdir, 'number': '001'})
-            d2 = cb.getfilepath('t1raw', att, patterns=cl.patterns)
+            att.update({'database': destdir, 'number': '*'})
+            fp_joker = cb.getfilepath(datatype, att, patterns=cl.patterns)
+            from glob import glob
+            number = len(glob(fp_joker)) + 1
+            att.update({'database': destdir, 'number': '%03d'%number})
+            d2 = cb.getfilepath(datatype, att, patterns=cl.patterns)
+
+            if not osp.exists(d): os.makedirs(d)
+            os.system('cp %s %s'%(fp, d2))
             print 'cp %s %s'%(fp, d2)
 
 
