@@ -101,3 +101,49 @@ def move_mapt_to_cloud_hierarchy(actions, destdir):
 
 
 
+def collect_dwi():
+    dd = '/neurospin/cati/MEMENTO/DiffusionMRI/'
+    from glob import glob
+    import os.path as osp
+    import os
+    header = ['subject','side','value','maximum', 'minimum', 'mean', 'standard_deviation','filepath']
+
+    files = []
+    res = [header]
+
+    files.extend(glob(osp.join(dd, '*', '7_stats', '*', 'Fornix_*')))
+    #files.extend(glob(osp.join(dd, '*', '7_stats', '*', 'Fornix_*', 'fa.csv')))
+
+    import json
+    json.dump(files, open('/tmp/files.json','w'))
+    #files = json.load(open('/tmp/files.json'))
+
+    for f in files[:]:
+        if not osp.isdir(f):
+            print f, 'skipped'
+            continue
+        s = f.split('/')
+        center = s[-4]
+        subject = '%s%s'%(center,s[-2].split('_')[-1])
+        side = s[-1].split('_')[-1].lower()
+        print f
+        for i in ['adc', 'fa']:
+            res.append([subject, side, i])
+            stats = {}
+            fp = osp.join(f, '%s.csv'%i)
+            execfile(fp, stats)
+            for each in ['maximum', 'minimum', 'mean', 'standard-deviation']:
+                if len(stats['statistics']) > 0:
+                    res[-1].append(stats['statistics'][stats['statistics'].keys()[0]][each])
+                else:
+                    res[-1].append('')
+            res[-1].append(fp)
+
+
+    #save csv
+    import csv
+    with open('fornix.csv', 'wb') as testfile:
+        csv_writer = csv.writer(testfile)
+        for each in res:
+            csv_writer.writerow(each)
+    return res
