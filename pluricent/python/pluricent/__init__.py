@@ -23,9 +23,10 @@ def add_study(session, name, description_file=None, readme_file=None):
 def add_subjects(session, subjects, study):
     import os.path as osp
     import os
+    import pluricent as pl
     from pluricent.models import Study, Subject
     ds = datasource(session)
-    study_id = study_id(session, study)
+    study_id = pl.study_id(session, study)
     studydir = session.query(Study.directory).filter(Study.id==study_id).one()[0]
     assert(osp.isdir(osp.join(ds, studydir)))
     for s in subjects:
