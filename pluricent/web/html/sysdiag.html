@@ -42,37 +42,17 @@
       </div>
     </nav>
 
-    <!-- Main jumbotron for a primary marketing message or call to action -->
-    <div class="jumbotron">
     <div class="container">
-    </div><!-- /container -->
-      <div class="container">
-        <h1 id="hello">Hello, {{ username }}</h1>
-        <p>This is the main page.</p>
-        <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
-      </div>
-    </div>
+      <div class="starter-template">
+      test
+      <table class="table">
+        <tr class=""><th>Tests from {{last_checked}}</th></tr>
+        <tr class="{{test_create_database}}"><td>Test create database</td></tr>
+        <tr class="{{test_create_study}}"><td>Test create study</td></tr>
+        <tr class="{{test_create_subjects}}"><td>Test create subjects</td></tr>
+      </table>
 
-    <div class="container">
-      <!-- Example row of columns -->
-      <div class="row">
-        <div class="col-md-4">
-          <h2>Explore</h2>
-          <p><img style="width:60%" src="{{static_url("images/explore.png")}}"></p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
-        </div>
-        <div class="col-md-4">
-          <h2>Analyze</h2>
-          <p><img style="width:60%" src="{{static_url("images/chart.png")}}"></p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
-       </div>
-        <div class="col-md-4">
-          <h2>Control</h2>
-          <p><img style="width:60%" src="{{static_url("images/sysdiag.png")}}"></p>
-          <p><a class="btn btn-default" href="sysdiag/" role="button">View details &raquo;</a></p>
-        </div>
-      </div>
-
+      </div> <!-- /container -->
       <hr>
 
       <footer>

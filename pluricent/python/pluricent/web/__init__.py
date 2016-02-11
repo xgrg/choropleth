@@ -20,6 +20,23 @@ class MainHandler(BaseHandler):
         username = self.current_user[1:-1]
         self.render("html/index.html", username = username)
 
+class SysDiagHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        username = self.current_user[1:-1]
+        import json
+        import os.path as osp
+        from datetime import datetime
+        import dateutil.parser
+        results = json.load(open(osp.join(settings.STATIC_PATH, 'json', 'sysdiag.json')))
+        d = dateutil.parser.parse(results['last_checked'])
+        results['last_checked'] = d.strftime('%Y-%m-%d %H:%M:%S')
+        for k,v in results.items():
+            if not v in [False, True]: continue
+            results[k] = {False: "danger", True: "success"}[v]
+        print results
+        self.render("html/sysdiag.html", username = username, **results)
+
 class AuthLoginHandler(BaseHandler):
     def get(self):
         try:
@@ -61,6 +78,7 @@ class Application(tornado.web.Application):
             (r"/", MainHandler),
             (r"/auth/login/", AuthLoginHandler),
             (r"/auth/logout/", AuthLogoutHandler),
+            (r"/sysdiag/", SysDiagHandler),
         ]
         s = {
             "template_path":settings.TEMPLATE_PATH,
