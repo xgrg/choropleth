@@ -18,7 +18,13 @@ class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         username = self.current_user[1:-1]
-        self.render("html/index.html", username = username)
+        import pluricent as pl
+        import os.path as osp
+        fn = osp.abspath(osp.join(osp.dirname(pl.__file__), '..', '..', 'pluricent.db'))
+        assert(osp.isfile(fn))
+        s = pl.create_session(fn)
+        settings = {'datasource': pl.datasource(s), 'database': fn}
+        self.render("html/index.html", username = username, **settings)
 
 class ExploreHandler(BaseHandler):
     @tornado.web.authenticated
