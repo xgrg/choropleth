@@ -88,7 +88,11 @@ def create_database(fn = 'pluricent.db', datasource = 'pluricent/'):
 
     assert(osp.exists(datasource) and len(os.listdir(datasource)) == 0)
 
-    print 'deleting all contents from %s'%fn
+    if osp.isfile(fn):
+       print 'deleting all contents from %s'%fn
+    else:
+       print 'creating %s'%fn
+
     engine = create_engine('sqlite:///%s'%fn, encoding='utf-8')
     Base.metadata.bind = engine
     Base.metadata.reflect()
