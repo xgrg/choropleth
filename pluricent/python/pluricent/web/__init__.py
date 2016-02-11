@@ -20,6 +20,12 @@ class MainHandler(BaseHandler):
         username = self.current_user[1:-1]
         self.render("html/index.html", username = username)
 
+class ExploreHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        username = self.current_user[1:-1]
+        self.render("html/explore.html", username = username)
+
 class SysDiagHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
@@ -79,6 +85,7 @@ class Application(tornado.web.Application):
             (r"/auth/login/", AuthLoginHandler),
             (r"/auth/logout/", AuthLogoutHandler),
             (r"/sysdiag/", SysDiagHandler),
+            (r"/explore/", ExploreHandler),
         ]
         s = {
             "template_path":settings.TEMPLATE_PATH,
