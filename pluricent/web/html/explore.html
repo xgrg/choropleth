@@ -44,7 +44,6 @@
 
     <div class="container">
       <div class="starter-template">
-      <div id="warning" class="alert alert-warning" role="warning">{{warning}}</div>
       test
       <div id="studies">
       </div>
@@ -78,6 +77,14 @@
       }
       return html;
      });
+    $('div.starter-template').html(function(){
+       warning = '{{warning}}';
+       html = $(this).html();
+       if (warning.length != 0){
+          html = '<div id="warning" class="alert alert-warning" role="warning">{{warning}}</div>' + html;
+       }
+       return html;
+    });
     </script>
   </body>
 </html>
