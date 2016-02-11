@@ -17,8 +17,7 @@ class BaseHandler(tornado.web.RequestHandler):
 class MainHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
-        username = tornado.escape.xhtml_escape(self.current_user)
-        print self.current_user, username
+        username = self.current_user[1:-1]
         self.render("html/index.html", username = username)
 
 class AuthLoginHandler(BaseHandler):
