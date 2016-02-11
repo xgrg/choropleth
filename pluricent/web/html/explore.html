@@ -44,7 +44,10 @@
 
     <div class="container">
       <div class="starter-template">
+      <div id="warning" class="alert alert-warning" role="warning">{{warning}}</div>
       test
+      <div id="studies">
+      </div>
 
       </div> <!-- /container -->
       <hr>
@@ -60,6 +63,22 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
+    <script>
+    $('#studies').html(function(){
+      html = '';
+      console.log('{{studies}}');
+      studies = JSON.parse('{{studies}}');
+      console.log(studies);
+      if (studies.length == 0) {
+          return 'no study';
+      }
+      for (each in studies){
+         study_link = "?study=" + studies[each];
+         html += '<a type="button" class="btn btn-primary btn-lg btn-block" href="'+ study_link +'">'+ studies[each] +'</a>';
+      }
+      return html;
+     });
+    </script>
   </body>
 </html>
 

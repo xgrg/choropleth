@@ -24,7 +24,34 @@ class ExploreHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
         username = self.current_user[1:-1]
-        self.render("html/explore.html", username = username)
+        import pluricent as pl
+        import os.path as osp
+        import json
+        warning = ''
+        default = True
+
+        # Retrieving studies from the database
+        fn = osp.join(osp.dirname(pl.__file__), '..', '..', 'pluricent.db')
+        assert(osp.isfile(fn))
+        s = pl.create_session(fn)
+        studies = pl.studies(s)
+
+        if 'study' in self.request.arguments:
+           # Study selected: displaying more info
+           study = self.get_argument('study')
+           if study in studies:
+
+              self.write('hey')
+              return
+           else:
+              warning = 'invalid study'
+              default = True
+
+        if default:
+           # Welcome page for study selection
+           studies = json.dumps(studies)
+           self.render("html/explore.html", username = username, studies = studies, warning = warning)
+
 
 class SysDiagHandler(BaseHandler):
     @tornado.web.authenticated
@@ -94,7 +121,7 @@ class Application(tornado.web.Application):
             "cookie_secret": settings.COOKIE_SECRET,
             "login_url": "/auth/login/"
         }
-        tornado.web.Application.__init__(self, handlers, **s)
+        tornado.web.Application.__init__(self, handlers, autoescape=None, **s)
 
 def main():
     tornado.options.parse_command_line()
