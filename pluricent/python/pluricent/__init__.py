@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 import base, inspect
-from models import initialize_database, create_session
+from models import create_database, create_session
 
 
 def add_study(session, name, description_file=None, readme_file=None):

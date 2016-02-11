@@ -79,7 +79,7 @@ def create_session(fn = 'pluricent.db'):
     session = DBSession()
     return session
 
-def initialize_database(fn = 'pluricent.db', datasource = 'pluricent/'):
+def create_database(fn = 'pluricent.db', datasource = 'pluricent/'):
     ''' Initializes a sqlite database with empty tables e.g. Action, Study, Subject, Center, Scanner, T1Image '''
     import os.path as osp
     import os
@@ -117,9 +117,11 @@ def initialize_database(fn = 'pluricent.db', datasource = 'pluricent/'):
         id = Column(Integer, primary_key=True)
         identifier = Column(String(25), nullable=False)
         study_id = Column(Integer, ForeignKey('study.id'), nullable=False)
+        study_name = Column(Integer, ForeignKey('study.name'), nullable=False)
         birth_date = Column(String(10))
         sex = Column(String(1))
-        study = relationship(Study)
+        study1 = relationship(Study, foreign_keys=study_id)
+        study2 = relationship(Study, foreign_keys=study_name)
 
     class Action(Base):
         __tablename__ = 'action'
@@ -148,6 +150,7 @@ def initialize_database(fn = 'pluricent.db', datasource = 'pluricent/'):
         subject_id = Column(Integer, ForeignKey('subject.id'), nullable=False)
         acquisition_date = Column(String(10))
         scanner_id = Column(Integer, ForeignKey('scanner.id'))
+        timepoint = Column(String(10))
         quality_report = Column(String(25))
         quality_score = Column(Integer, doc="General quality score summarizing all various aspects of the image")
         subject = relationship(Subject)
