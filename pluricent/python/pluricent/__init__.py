@@ -55,6 +55,12 @@ def studies(session):
     import models
     return [each.name for each in session.query(models.Study).all()]
 
+def subjects(session, study):
+    import models
+    import pluricent as pl
+    study_id = pl.study_id(session, study)
+    return [each.identifier for each in session.query(models.Subject).filter(models.Subject.study_id==study_id).all()]
+
 def datasource(session):
     import models
     General = models.General
