@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+baseurl = 'http://localhost:8888/'
+credentials = {'username': 'admin', 'password':'admin'}
 
 def __new_dummy__():
     import os.path as osp
@@ -28,25 +30,54 @@ def __last_dummy__():
     dummydb = dummydb%a
     return dummydb, dummydir
 
+# Web-based tests
 
 def test_login_logout():
    import requests
    print 'Check the server is running'
-   url = 'http://localhost:8888/auth/login/'
+   url = baseurl + 'auth/login/'
    data = {'username': 'toto', 'password':'admin'}
-   r = requests.post(url, data=data)
-   res = r.url == 'http://localhost:8888/auth/login/?error=Login+incorrect'
+   try:
+       r = requests.post(url, data=data)
+       res = r.url == baseurl + 'auth/login/?error=Login+incorrect'
 
-   data = {'username': 'admin', 'password':'admin'}
-   r = requests.post(url, data=data)
-   res = res and '<a id="logout"' in r.text
+       data = credentials
+       r = requests.post(url, data=data)
+       res = res and '<a id="logout"' in r.text
 
-   url = 'http://localhost:8888/auth/logout/'
-   r = requests.get(url)
-   res = res and 'http://localhost:8888/auth/login/' in r.url
+       url = baseurl + 'auth/logout/'
+       r = requests.get(url)
+       res = res and baseurl + 'auth/login/' in r.url
+   except Exception as e:
+       res = False
+       print e
 
    return res
 
+def test_invalid_study():
+   import requests
+   url = baseurl + 'auth/login/'
+   r = requests.post(url, data=credentials)
+   url = baseurl + 'explore/?study=toto'
+   print url
+   r = requests.get(url)
+   print r.text
+   res = 'invalid study' in r.text
+   return res
+
+def test_valid_study():
+#FIXME
+   import requests
+   import pluricent as pl
+   url = baseurl + 'auth/login/'
+   r = requests.post(url, data=credentials)
+   url = baseurl + 'explore/?study=study01'
+
+   r = requests.get(url)
+   res = 'invalid study' in r.text
+   return res
+
+# Database-based tests
 
 def test_create_database():
     import pluricent as p
@@ -88,11 +119,13 @@ def test_create_subjects():
     return True
 
 
+
 if __name__ == '__main__':
     results = {}
     from datetime import datetime
     results['last_checked'] = datetime.now().isoformat()
-    #test_login_logout()
+    results['test_login_logout'] = test_login_logout()
+    results['test_invalid_study'] = results['test_login_logout'] and test_invalid_study()
     results['test_create_database'] = test_create_database()
     results['test_create_study'] = test_create_study()
     results['test_create_subjects'] = test_create_subjects()
@@ -101,5 +134,5 @@ if __name__ == '__main__':
     import pluricent as pl
     import os.path as osp
     fp = osp.join(osp.dirname(pl.__file__), '..', '..', 'web', 'json', 'sysdiag.json')
-    json.dump(results, open(fp, 'w'))
+    json.dump(results, open(fp, 'w'), indent=2)
 
