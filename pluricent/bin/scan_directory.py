@@ -99,7 +99,30 @@ def move_mapt_to_cloud_hierarchy(actions, destdir):
             os.system('cp %s %s'%(fp, d2))
             print 'cp %s %s'%(fp, d2)
 
+def test_respect_hierarchy(destdir):
+    ''' Checks that every file/folder in pzdir is identified by the hierarchy
+    Returns True if the unknown list is empty'''
+    from brainvisa import checkbase as cb
+    cl = cb.CloudyCheckbase(pzdir)
+    import os
+    import os.path as osp
+    unknown = []
+
+    for root, dirs, files in os.walk(pzdir):
+        for f in files:
+            fp = osp.join(root, f)
+            print fp
+            res = cb.parsefilepath(fp, cl.patterns)
+            if res is None:
+               unknown.append(fp)
+    return len(unknown) == 0
+
 def check_pushzone(pzdir, destdir):
+    ''' Checks that every file/folder in pzdir is identified by the hierarchy
+    and that they are not already existing in destdir.
+    No control on the database entries in this function.
+    Returns two lists of items marked as unknown and already existing'''
+
     from brainvisa import checkbase as cb
     cl = cb.CloudyCheckbase(pzdir)
     import os
@@ -125,21 +148,47 @@ def check_pushzone(pzdir, destdir):
 
 
 def push_to_repo(pzdir, destdir):
+    ''' This functions is only to push images (provided studies and subjects
+    have been already previously created'''
     unknown, already_existing = check_pushzone(pzdir, destdir)
     from brainvisa import checkbase as cb
+    import os
+    import os.path as osp
+    import pluricent as pl
+    from pluricent.web import settings
+
     cl = cb.CloudyCheckbase(pzdir)
     if len(unknown) == 0 and len(already_existing) == 0:
        print 'pushzone ok'
-       import os
-       import os.path as osp
        for root, dirs, files in os.walk(pzdir):
           for f in files:
              fp = osp.join(root, f)
              res = cb.parsefilepath(fp, cl.patterns)
              datatype, att = res
-             att['database'] = destdir
+             study_dir = osp.split(att['database'])[-1]
+             att['database'] = osp.join(destdir, study_dir)
              fp2 = cb.getfilepath(datatype, att, cl.patterns)
              print 'cp %s %s'%(fp, fp2)
+             s = pl.create_session(settings.DATABASE)
+             print '...checking directory %s already referring to a study'%study_dir
+             study = [e for e in pl.studies(s) if study_dir == pl.study_dir(s, e)][0]
+             studies_dir = [pl.study_dir(s, e) for e in pl.studies(s)]
+             assert(study_dir in studies_dir)
+             print '=> yes (%s)'%study
+
+             print '...checking %s already exists in %s'%(att['subject'], study)
+             subjects = pl.subjects(s, study)
+             assert(att['subject'] in subjects)
+             print '=> yes'
+
+             print '...checking that the image %s is not already existing'%fp[len(pzdir)+1:]
+             t1images = pl.t1images(s, study)
+
+             print '...creating action'
+             #pl.add_action(
+
+             print '...copying file'
+             print '...adding entry in database'
 
     else:
        print 'pushzone errors'
