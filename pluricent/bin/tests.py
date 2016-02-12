@@ -91,10 +91,11 @@ def test_login_logout():
 def test_invalid_study():
    import requests
    url = baseurl + 'auth/login/'
-   r = requests.post(url, data=credentials)
+   s = requests.Session()
+   r = s.post(url, data=credentials)
    url = baseurl + 'explore/?study=toto'
    print url
-   r = requests.get(url)
+   r = s.get(url)
    print r.text
    res = 'invalid study' in r.text
    return res
