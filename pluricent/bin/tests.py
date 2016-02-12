@@ -74,14 +74,17 @@ def test_login_logout():
    try:
        r = requests.post(url, data=data)
        res = r.url == baseurl + 'auth/login/?error=Login+incorrect'
+       print res
 
        data = credentials
        r = requests.post(url, data=data)
        res = res and '<a id="logout"' in r.text
+       print r.text, res
 
        url = baseurl + 'auth/logout/'
        r = requests.get(url)
        res = res and baseurl + 'auth/login/' in r.url
+       print res
    except Exception as e:
        res = False
        print e
