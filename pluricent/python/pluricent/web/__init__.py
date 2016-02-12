@@ -22,8 +22,8 @@ class MainHandler(BaseHandler):
         import os.path as osp
         fn = osp.abspath(settings.DATABASE)
         s = pl.create_session(fn)
-        settings = {'datasource': pl.datasource(s), 'database': fn}
-        self.render("html/index.html", username = username, **settings)
+        args = {'datasource': pl.datasource(s), 'database': fn}
+        self.render("html/index.html", username = username, **args)
 
 class ExploreHandler(BaseHandler):
     @tornado.web.authenticated
