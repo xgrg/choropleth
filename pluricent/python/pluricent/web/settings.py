@@ -4,6 +4,7 @@ DIRNAME = '/'.join(osp.dirname(__file__).split('/')[:-3])
 print DIRNAME
 STATIC_PATH = osp.join(DIRNAME, 'web')
 TEMPLATE_PATH = osp.join(DIRNAME, 'web')
+DATABASE = osp.join(DIRNAME, 'pluricent.db')
 
 import logging
 import sys
