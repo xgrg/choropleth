@@ -170,6 +170,22 @@ def test_create_subjects():
     return True
 
 
+#================================
+# Database-based tests (on prod)
+
+def test_studies():
+    ''' Compares studies between the repository and the database '''
+    from pluricent.web import settings
+    import pluricent as pl
+    import os, os.path as osp
+    db = settings.DATABASE
+    s = pl.create_session(db)
+    ds = pl.datasource(s)
+    studies_db = list(set([pl.study_dir(s, e) for e in pl.studies(s)]))
+    studies_ds = list(set([e for e in os.listdir(ds) \
+            if osp.isdir(osp.join(ds,e)) and not e in ['.','..']]))
+    print studies_db, studies_ds
+    return studies_db == studies_ds
 
 def run_tests(results):
     test_functions = __collect_tests__()
