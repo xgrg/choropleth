@@ -299,7 +299,7 @@ if __name__ == '__main__':
     results = {}
     f = __collect_tests__()
     for fname, _ in f:
-        results[fname] = False
+        results[fname] = None
 
     # ==== argparse ====
     import argparse, inspect
