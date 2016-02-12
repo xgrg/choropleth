@@ -36,17 +36,21 @@ class ExploreHandler(BaseHandler):
         default = True
 
         # Retrieving studies from the database
-        fn = osp.join(osp.dirname(pl.__file__), '..', '..', 'pluricent.db')
-        assert(osp.isfile(fn))
-        s = pl.create_session(fn)
+        s = pl.create_session(settings.DATABASE)
         studies = pl.studies(s)
 
         if 'study' in self.request.arguments:
            # Study selected: displaying more info
            study = self.get_argument('study')
            if study in studies:
-
-              self.write('hey')
+              images = pl.t1images(s, study)
+              print study, images
+              d = []
+              for each in images:
+                 d.append({'subject': each.subject.identifier,
+                     'path': each.path,
+                     'id': each.id})
+              self.render("html/explore_study.html", username = username, study_name = study, warning = warning, images=d)
               return
            else:
               warning = 'invalid study'
