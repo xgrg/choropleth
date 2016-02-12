@@ -40,6 +40,9 @@ def study_id(session, study):
     from models import Study
     return session.query(Study.id).filter(Study.name==study).one()[0]
 
+def study_dir(session, study):
+    from models import Study
+    return session.query(Study.directory).filter(Study.name==study).one()[0]
 
 def subject_id(session, study_name, identifier):
     from models import Subject
