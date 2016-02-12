@@ -253,15 +253,13 @@ def test_matching_t1images():
         for f in files:
             scanned += 1
             fp = osp.join(root, f)
-            print fp
             res = cb.parsefilepath(fp, cl.patterns)
             if not res is None:
                 datatype, att = res
                 if datatype == 'raw':
-                    print fp
                     raw_files.append(fp[len(destdir):])
 
-    raw_entries = pl.t1images(s)
+    raw_entries = [e.path for e in pl.t1images(s)]
 
     # comparing raw_files and raw_entries
     matching = True
@@ -270,7 +268,7 @@ def test_matching_t1images():
             print f, 'missing from raw_entries'
             matching = False
     for f in raw_entries:
-        if not f.path in raw_files:
+        if not f in raw_files:
             print f.path, 'missing from raw_files'
             matching = False
 
@@ -288,6 +286,7 @@ def run_tests(results):
     test_functions = __collect_tests__()
     for fname, func in test_functions:
         results[fname] = func()
+        print '=== %s : %s ==='%(fname, results[fname])
     return results
 
 def run_test(test):
