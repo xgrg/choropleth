@@ -52,7 +52,7 @@ def test_database_exists():
     return osp.isfile(db)
 
 def test_datasource_exists():
-    ''' Returns False if the database as defined in pluricent.settings
+    ''' Returns False if the datasource as defined in the database
     is missing'''
     import os.path as osp
     from pluricent.web import settings
@@ -67,6 +67,11 @@ def test_datasource_exists():
 # Web-based tests
 
 def test_login_logout():
+   ''' Performs 3 tests in a row :
+   - login with wrong credentials
+   - login with correct credentials
+   - logout
+   Returns True if the 3 tests are successful'''
    import requests
    print 'Check the server is running'
    url = baseurl + 'auth/login/'
@@ -92,6 +97,8 @@ def test_login_logout():
    return res
 
 def test_invalid_study():
+   ''' Logs in and acts as if just asked for a non-existing study.
+   Returns True if successfully redirected with an information message'''
    import requests
    url = baseurl + 'auth/login/'
    s = requests.Session()
@@ -116,10 +123,11 @@ def test_valid_study():
    return res
 
 
-#=====================
-# Database-based tests
+#===============================
+# Database-based tests (on dummy)
 
 def test_create_database():
+    '''Creates a dummy database and repository in /tmp'''
     import pluricent as p
     import os
 
@@ -131,6 +139,7 @@ def test_create_database():
 
 
 def test_create_study():
+    ''' Creates a study in the last dummy database created'''
     import pluricent as p
 
     dummydb, dummydir = __last_dummy__()
@@ -143,6 +152,8 @@ def test_create_study():
     return True
 
 def test_create_subjects():
+    ''' Adds subjects to the first study of the last dummy
+    database created'''
     import pluricent as p
 
     dummydb, dummydir = __last_dummy__()
