@@ -166,20 +166,34 @@ def run_tests(results):
         results[fname] = func()
     return results
 
+def run_test(test):
+    test_functions = dict(__collect_tests__())
+    test_functions[test]()
+
 if __name__ == '__main__':
-    # brand new results
+    # ==== brand new results ====
     results = {}
     f = __collect_tests__()
     for fname, _ in f:
         results[fname] = False
 
-    # argparse
+    # ==== argparse ====
     import argparse, inspect
     parser = argparse.ArgumentParser(description='Runs unit tests (to date: %s)'%', '.join(results.keys()))
     parser.add_argument("--debug", help="Debug mode: raise exceptions (default: skips errors\
             until the end, writes the output in json file)", action="store_true")
+    parser.add_argument("-t", dest='test_name', type=str, help="Run specific test (in debug mode)", required=False)
     args = parser.parse_args()
 
+    # ==== run specific test ? ====
+    if args.test_name:
+        if not args.test_name in results.keys():
+            raise Exception('%s should refer to an existing test (%s)'%(args.test_name, results.keys()))
+        run_test(args.test_name)
+        import sys
+        sys.exit(0)
+
+    # ==== run tests ====
     from datetime import datetime
     results['last_checked'] = datetime.now().isoformat()
 
