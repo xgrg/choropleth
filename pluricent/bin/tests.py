@@ -187,6 +187,103 @@ def test_studies():
     print studies_db, studies_ds
     return studies_db == studies_ds
 
+def test_unique_subjects():
+    ''' Checks that subjects identifiers are unique in every study '''
+    from pluricent.web import settings
+    import pluricent as pl
+    import os, os.path as osp
+    db = settings.DATABASE
+    s = pl.create_session(db)
+    studies = pl.studies(s)
+    unique = True
+    for each in studies:
+        subjects = pl.subjects(s, each)
+        if not len(subjects) == len(set(subjects)):
+            unique = False
+            print each
+    return unique
+
+
+def test_respect_hierarchy():
+    ''' Checks that every file/folder in the repository is identified by the hierarchy
+    Returns True if the unknown list is empty'''
+    from pluricent import checkbase as cb
+    import pluricent as pl
+    from pluricent.web import settings
+    s = pl.create_session(settings.DATABASE)
+    destdir = pl.datasource(s)
+
+    cl = cb.CloudyCheckbase(destdir)
+    import os
+    import os.path as osp
+    unknown = []
+    scanned = 0
+    print destdir
+
+    for root, dirs, files in os.walk(destdir):
+        for f in files:
+            scanned += 1
+            fp = osp.join(root, f)
+            print fp
+            res = cb.parsefilepath(fp, cl.patterns)
+            if res is None:
+               unknown.append(fp)
+    print 'unknown', unknown
+    print 'scanned items :', scanned
+    return len(unknown) == 0
+
+def test_matching_t1images():
+    ''' Checks if T1 images entries in the database are matching with
+    existing files in the repository'''
+    from pluricent import checkbase as cb
+    import pluricent as pl
+    from pluricent.web import settings
+    s = pl.create_session(settings.DATABASE)
+    destdir = pl.datasource(s)
+
+    cl = cb.CloudyCheckbase(destdir)
+    import os
+    import os.path as osp
+    unknown = []
+    scanned = 0
+    print destdir
+
+    raw_files = []
+    for root, dirs, files in os.walk(destdir):
+        for f in files:
+            scanned += 1
+            fp = osp.join(root, f)
+            print fp
+            res = cb.parsefilepath(fp, cl.patterns)
+            if not res is None:
+                datatype, att = res
+                if datatype == 'raw':
+                    print fp
+                    raw_files.append(fp[len(destdir):])
+
+    raw_entries = pl.t1images(s)
+
+    # comparing raw_files and raw_entries
+    matching = True
+    for f in raw_files:
+        if not f in raw_entries:
+            print f, 'missing from raw_entries'
+            matching = False
+    for f in raw_entries:
+        if not f.path in raw_files:
+            print f.path, 'missing from raw_files'
+            matching = False
+
+    print 'items in %s :'%destdir, scanned
+    print 'entries in db:', len(raw_entries)
+    return matching
+
+
+
+
+# ===================================================
+# End of tests
+
 def run_tests(results):
     test_functions = __collect_tests__()
     for fname, func in test_functions:
