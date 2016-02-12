@@ -88,8 +88,8 @@ class SysDiagHandler(BaseHandler):
            results['last_checked'] = d.strftime('%Y-%m-%d %H:%M:%S')
            results['error'] = ''
            for k,v in results.items():
-               if not v in [False, True]: continue
-               results[k] = {False: "danger", True: "success"}[v]
+               if not v in [False, True, None]: continue
+               results[k] = {False: "danger", True: "success", None:''}[v]
            print results
 
         else:
