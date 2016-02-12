@@ -30,6 +30,40 @@ def __last_dummy__():
     dummydb = dummydb%a
     return dummydb, dummydir
 
+def __collect_tests__():
+    import inspect, os, importlib, os.path as osp
+    from pluricent.web import settings
+    d = osp.dirname(osp.abspath(settings.STATIC_PATH))
+    os.chdir(d)
+    m = importlib.import_module('tests')
+    test_functions = [e for e in inspect.getmembers(m, inspect.isfunction) if e[0].startswith('test')]
+    return test_functions
+
+#================
+# Basic tests
+
+def test_database_exists():
+    ''' Returns False if the database as defined in pluricent.settings
+    is missing'''
+    import os.path as osp
+    from pluricent.web import settings
+    import pluricent as pl
+    db = settings.DATABASE
+    return osp.isfile(db)
+
+def test_datasource_exists():
+    ''' Returns False if the database as defined in pluricent.settings
+    is missing'''
+    import os.path as osp
+    from pluricent.web import settings
+    import pluricent as pl
+    db = settings.DATABASE
+    s = pl.create_session(db)
+    ds = pl.datasource(s)
+    return osp.isdir(ds)
+
+
+#================
 # Web-based tests
 
 def test_login_logout():
@@ -77,6 +111,8 @@ def test_valid_study():
    res = 'invalid study' in r.text
    return res
 
+
+#=====================
 # Database-based tests
 
 def test_create_database():
@@ -120,19 +156,43 @@ def test_create_subjects():
 
 
 
+def run_tests(results):
+    test_functions = __collect_tests__()
+    for fname, func in test_functions:
+        results[fname] = func()
+    return results
+
 if __name__ == '__main__':
+    # brand new results
     results = {}
+    f = __collect_tests__()
+    for fname, _ in f:
+        results[fname] = False
+
+    # argparse
+    import argparse, inspect
+    parser = argparse.ArgumentParser(description='Runs unit tests (to date: %s)'%', '.join(results.keys()))
+    parser.add_argument("--debug", help="Debug mode: raise exceptions (default: skips errors\
+            until the end, writes the output in json file)", action="store_true")
+    args = parser.parse_args()
+
     from datetime import datetime
     results['last_checked'] = datetime.now().isoformat()
-    results['test_login_logout'] = test_login_logout()
-    results['test_invalid_study'] = results['test_login_logout'] and test_invalid_study()
-    results['test_create_database'] = test_create_database()
-    results['test_create_study'] = test_create_study()
-    results['test_create_subjects'] = test_create_subjects()
+
+    if args.debug:
+        results = run_tests(results)
+    else:
+        try:
+            results = run_tests(results)
+        except Exception as e:
+            print e
+
 
     import json
     import pluricent as pl
     import os.path as osp
-    fp = osp.join(osp.dirname(pl.__file__), '..', '..', 'web', 'json', 'sysdiag.json')
+    print '===================================================================================================='
+    fp = osp.abspath(osp.join(osp.dirname(pl.__file__), '..', '..', 'web', 'json', 'sysdiag.json'))
+    print 'Writing json... %s'%fp
     json.dump(results, open(fp, 'w'), indent=2)
 

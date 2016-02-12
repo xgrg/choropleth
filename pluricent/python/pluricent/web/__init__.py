@@ -20,8 +20,7 @@ class MainHandler(BaseHandler):
         username = self.current_user[1:-1]
         import pluricent as pl
         import os.path as osp
-        fn = osp.abspath(osp.join(osp.dirname(pl.__file__), '..', '..', 'pluricent.db'))
-        assert(osp.isfile(fn))
+        fn = osp.abspath(settings.DATABASE)
         s = pl.create_session(fn)
         settings = {'datasource': pl.datasource(s), 'database': fn}
         self.render("html/index.html", username = username, **settings)
@@ -59,6 +58,15 @@ class ExploreHandler(BaseHandler):
            self.render("html/explore.html", username = username, studies = studies, warning = warning)
 
 
+def __collect_tests__():
+    import inspect, os, importlib, os.path as osp
+    from pluricent.web import settings
+    d = osp.dirname(osp.abspath(settings.STATIC_PATH))
+    os.chdir(d)
+    m = importlib.import_module('tests')
+    test_functions = [e for e in inspect.getmembers(m, inspect.isfunction) if e[0].startswith('test')]
+    return test_functions
+
 class SysDiagHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
@@ -67,14 +75,32 @@ class SysDiagHandler(BaseHandler):
         import os.path as osp
         from datetime import datetime
         import dateutil.parser
-        results = json.load(open(osp.join(settings.STATIC_PATH, 'json', 'sysdiag.json')))
-        d = dateutil.parser.parse(results['last_checked'])
-        results['last_checked'] = d.strftime('%Y-%m-%d %H:%M:%S')
-        for k,v in results.items():
-            if not v in [False, True]: continue
-            results[k] = {False: "danger", True: "success"}[v]
-        print results
+        j = osp.join(settings.STATIC_PATH, 'json', 'sysdiag.json')
+
+        if osp.isfile(j):
+           # === sysdiag.json exists ===
+           results = json.load(open(j))
+           d = dateutil.parser.parse(results['last_checked'])
+           results['last_checked'] = d.strftime('%Y-%m-%d %H:%M:%S')
+           results['error'] = ''
+           for k,v in results.items():
+               if not v in [False, True]: continue
+               results[k] = {False: "danger", True: "success"}[v]
+           print results
+
+        else:
+           # === sysdiag.json missing ===
+           results = {}
+           # brand new results
+           f = __collect_tests__()
+           for fname, _ in f:
+              results[fname] = False
+           results['error'] = 'json missing'
+           results['last_checked'] = ''
+           print results
+
         self.render("html/sysdiag.html", username = username, **results)
+
 
 class AuthLoginHandler(BaseHandler):
     def get(self):

@@ -46,8 +46,10 @@
       <div class="starter-template">
       test
       <table class="table">
-        <tr class=""><th>Tests from {{last_checked}}</th></tr>
+        <tr class=""><th id='tests'>Tests from {{last_checked}}</th></tr>
         <tr class="{{test_login_logout}}"><td>Test login_logout</td></tr>
+        <tr class="{{test_database_exists}}"><td>Test database exists</td></tr>
+        <tr class="{{test_datasource_exists}}"><td>Test datasource exists</td></tr>
         <tr class="{{test_invalid_study}}"><td>Test invalid study</td></tr>
         <tr class="{{test_create_database}}"><td>Test create database</td></tr>
         <tr class="{{test_create_study}}"><td>Test create study</td></tr>
@@ -68,6 +70,24 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
+    <script>
+    $('div.starter-template').html(function(){
+       error = '{{error}}';
+       html = $(this).html();
+       if (error.length != 0){
+          html = '<div id="error" class="alert alert-danger" role="danger">'+error+'</div>' + html;
+       }
+       return html;
+    });
+    $('th#tests').text(function(){
+          text = $(this).text();
+          last_checked = '{{last_checked}}';
+          if (last_checked == false){
+              text = 'No tests found';
+          }
+          return text;
+    });
+    </script>
   </body>
 </html>
 
