@@ -81,7 +81,7 @@
        warning = '{{warning}}';
        html = $(this).html();
        if (warning.length != 0){
-          html = '<div id="warning" class="alert alert-warning" role="warning">{{warning}}</div>' + html;
+          html = '<div id="warning" class="alert alert-warning" role="warning">'+warning+'</div>' + html;
        }
        return html;
     });
