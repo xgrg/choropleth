@@ -121,11 +121,9 @@ def create_database(fn = 'pluricent.db', datasource = 'pluricent/'):
         id = Column(Integer, primary_key=True)
         identifier = Column(String(25), nullable=False)
         study_id = Column(Integer, ForeignKey('study.id'), nullable=False)
-        study_name = Column(Integer, ForeignKey('study.name'), nullable=False)
         birth_date = Column(String(10))
         sex = Column(String(1))
-        study1 = relationship(Study, foreign_keys=study_id)
-        study2 = relationship(Study, foreign_keys=study_name)
+        study = relationship(Study)
 
     class Action(Base):
         __tablename__ = 'action'
