@@ -83,9 +83,9 @@ def move_mapt_to_cloud_hierarchy(actions, destdir):
 
     assert(osp.exists(destdir))
 
-    for a in actions[0:10]:
+    for a in actions:
         k, v = a[0], a[1:]
-        if k=='add_image':
+        if k=='add_image' and v[1] == 'raw':
             subject, datatype, fp, att = v
             d = osp.join(destdir, subject, 'anatomy')
             att.update({'database': destdir, 'number': '*'})
