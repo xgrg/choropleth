@@ -213,24 +213,9 @@ def test_respect_hierarchy():
     s = pl.create_session(settings.DATABASE)
     destdir = pl.datasource(s)
 
-    cl = cb.CloudyCheckbase(destdir)
-    import os
-    import os.path as osp
-    unknown = []
-    scanned = 0
-    print destdir
+    from pluricent import tests as t
 
-    for root, dirs, files in os.walk(destdir):
-        for f in files:
-            scanned += 1
-            fp = osp.join(root, f)
-            print fp
-            res = cb.parsefilepath(fp, cl.patterns)
-            if res is None:
-               unknown.append(fp)
-    print 'unknown', unknown
-    print 'scanned items :', scanned
-    return len(unknown) == 0
+    return t.test_respect_hierarchy(destdir)
 
 def test_matching_t1images():
     ''' Checks if T1 images entries in the database are matching with

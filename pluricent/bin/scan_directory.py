@@ -5,7 +5,7 @@ that will populate the clean database. Mostly ad-hoc scripts
 performing quick and dirty operations
 
 *** scandir_BVdatabase : to run on BVddatabase directories
-(make use of brainvisa.checkbase)
+(make use of pluricent.checkbase)
 '''
 
 def size_to_human(full_size):
@@ -45,7 +45,7 @@ def scandir_BVdatabase(studydir):
     studydir = studydir.rstrip('/')
     assert(osp.split(studydir)[-1] == 'BVdatabase')
 
-    from brainvisa import checkbase as cb
+    from pluricent import checkbase as cb
     m = cb.MorphologistCheckbase(studydir)
 
     subjects = m.get_flat_subjects()
@@ -77,7 +77,7 @@ def scandir_BVdatabase(studydir):
 def move_mapt_to_cloud_hierarchy(actions, destdir):
     import os.path as osp
     import os, shutil
-    from brainvisa import checkbase as cb
+    from pluricent import checkbase as cb
     csv = ['']
     cl = cb.CloudyCheckbase(destdir)
 
@@ -99,23 +99,6 @@ def move_mapt_to_cloud_hierarchy(actions, destdir):
             os.system('cp %s %s'%(fp, d2))
             print 'cp %s %s'%(fp, d2)
 
-def test_respect_hierarchy(destdir):
-    ''' Checks that every file/folder in pzdir is identified by the hierarchy
-    Returns True if the unknown list is empty'''
-    from brainvisa import checkbase as cb
-    cl = cb.CloudyCheckbase(pzdir)
-    import os
-    import os.path as osp
-    unknown = []
-
-    for root, dirs, files in os.walk(pzdir):
-        for f in files:
-            fp = osp.join(root, f)
-            print fp
-            res = cb.parsefilepath(fp, cl.patterns)
-            if res is None:
-               unknown.append(fp)
-    return len(unknown) == 0
 
 def check_pushzone(pzdir, destdir):
     ''' Checks that every file/folder in pzdir is identified by the hierarchy
@@ -123,7 +106,7 @@ def check_pushzone(pzdir, destdir):
     No control on the database entries in this function.
     Returns two lists of items marked as unknown and already existing'''
 
-    from brainvisa import checkbase as cb
+    from pluricent import checkbase as cb
     cl = cb.CloudyCheckbase(pzdir)
     import os
     import os.path as osp
@@ -151,7 +134,7 @@ def push_to_repo(pzdir, destdir):
     ''' This functions is only to push images (provided studies and subjects
     have been already previously created'''
     unknown, already_existing = check_pushzone(pzdir, destdir)
-    from brainvisa import checkbase as cb
+    from pluricent import checkbase as cb
     import os
     import os.path as osp
     import pluricent as pl
