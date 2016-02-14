@@ -137,13 +137,33 @@ def populate_from_directory(directory, fn = 'pluricent.db'):
     import os
     import os.path as osp
     from pluricent import checkbase as cb
+    from pluricent import tests
+    import pluricent as pl
+    s = pl.create_session(fn)
+
+    assert(tests.test_respect_hierarchy(directory))
     cl = cb.CloudyCheckbase(directory)
     actions = []
 
     for root, dirs, files in os.walk(directory):
-        for each in dirs:
-            d = osp.join(root, each)
-#            cb.parsefilepath(
+        for f in files:
+            fp = osp.join(root, f)
+            res = cb.parsefilepath(fp, cl.patterns)
+            if not res is None:
+                datatype, att = res
+                if datatype in  'raw':
+                    study_dir = att['database'][len(directory):]
+                    print study_dir
+                    study = pl.study_from_dir(s, study_dir)
+                    print study
+
+                    actions.append(['add_t1image', fp[len(directory):], study, att['subject']])
+
+    print actions
+    print len(actions), 'actions to make'
+    ans = raw_input('proceed ? y/n')
+    if ans == 'y':
+        make_actions(s, actions)
 
 
 
