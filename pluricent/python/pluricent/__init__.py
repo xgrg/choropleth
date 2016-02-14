@@ -107,8 +107,9 @@ def add_t1image(session, path, study, subject):
 
 def add_action(session, action):
     from time import gmtime, strftime
+    from models import Action
     timestamp = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-    new_action = Action(action=str(a), timestamp=timestamp)
+    new_action = Action(action=str(action), timestamp=timestamp)
     session.add(new_action)
     session.commit()
 
