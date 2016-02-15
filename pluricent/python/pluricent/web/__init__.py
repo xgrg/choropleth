@@ -21,12 +21,12 @@ class MainHandler(BaseHandler):
         import pluricent as pl
         import os.path as osp
         fn = osp.abspath(settings.DATABASE)
-        args = {'warning':'', 'datasource':'', 'database':fn}
+        args = {'danger':'', 'datasource':'', 'database':fn}
         if osp.isfile(fn):
            s = pl.create_session(fn)
            args.update({'datasource': pl.datasource(s), 'database': fn})
         else:
-           args['warning'] = 'The database %s is missing'%fn
+           args['danger'] = 'The database %s is missing'%fn
         self.render("html/index.html", username = username, **args)
 
 class ExploreHandler(BaseHandler):
@@ -69,7 +69,8 @@ class ExploreHandler(BaseHandler):
 def __collect_tests__():
     import inspect, os, importlib, os.path as osp
     from pluricent.web import settings
-    d = osp.dirname(osp.abspath(settings.STATIC_PATH))
+    d = osp.join(osp.abspath(settings.DIRNAME), 'bin')
+    print d
     os.chdir(d)
     m = importlib.import_module('tests')
     test_functions = [e for e in inspect.getmembers(m, inspect.isfunction) if e[0].startswith('test')]

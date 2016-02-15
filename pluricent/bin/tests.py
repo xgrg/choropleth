@@ -33,7 +33,7 @@ def __last_dummy__():
 def __collect_tests__():
     import inspect, os, importlib, os.path as osp
     from pluricent.web import settings
-    d = osp.dirname(osp.abspath(settings.STATIC_PATH))
+    d = osp.dirname(osp.abspath(settings.DIRNAME))
     os.chdir(d)
     m = importlib.import_module('tests')
     test_functions = [e for e in inspect.getmembers(m, inspect.isfunction) if e[0].startswith('test')]
