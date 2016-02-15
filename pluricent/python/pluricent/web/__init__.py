@@ -21,8 +21,12 @@ class MainHandler(BaseHandler):
         import pluricent as pl
         import os.path as osp
         fn = osp.abspath(settings.DATABASE)
-        s = pl.create_session(fn)
-        args = {'datasource': pl.datasource(s), 'database': fn}
+        args = {'warning':'', 'datasource':'', 'database':fn}
+        if osp.isfile(fn):
+           s = pl.create_session(fn)
+           args.update({'datasource': pl.datasource(s), 'database': fn})
+        else:
+           args['warning'] = 'The database %s is missing'%fn
         self.render("html/index.html", username = username, **args)
 
 class ExploreHandler(BaseHandler):

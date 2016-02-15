@@ -88,6 +88,16 @@
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
     <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
+    <script>
+    $('div.jumbotron div.container').first().html(function(){
+       warning = '{{danger}}';
+       html = $(this).html();
+       if (warning.length != 0){
+          html = '<div id="warning" class="alert alert-danger" role="danger">'+warning+'</div>' + html;
+       }
+       return html;
+    });
+    </script>
   </body>
 </html>
 
