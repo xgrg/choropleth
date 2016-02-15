@@ -254,7 +254,7 @@ def test_matching_t1images():
             matching = False
     for f in raw_entries:
         if not f in raw_files:
-            print f.path, 'missing from raw_files'
+            print f, 'missing from raw_files'
             matching = False
 
     print 'items in %s :'%destdir, scanned
