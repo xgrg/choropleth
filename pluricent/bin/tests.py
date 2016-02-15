@@ -7,20 +7,19 @@ def __new_dummy__():
     import os.path as osp
     a = 0
     dummydir = '/tmp/dummydb_%s'
-    dummydb = '/tmp/dummydb_%s.db'
-    while osp.isdir(dummydir%a) or osp.isfile(dummydb%a):
+    while osp.isdir(dummydir%a):
         a += 1
 
     # Careful : dummydir becomes dummydir%a
     dummydir = dummydir%a
-    dummydb = dummydb%a
+    dummydb = osp.join(dummydir, 'pluricent.db')
     return dummydb, dummydir
 
 def __last_dummy__():
     import os.path as osp
     a = 100
     dummydir = '/tmp/dummydb_%s'
-    dummydb = '/tmp/dummydb_%s.db'
+    dummydb = osp.join(dummydir, 'pluricent.db')
 
     while not osp.isdir(dummydir%a) or not osp.isfile(dummydb%a):
         a -= 1
@@ -135,7 +134,7 @@ def test_create_database():
     dummydb, dummydir = __new_dummy__()
 
     os.mkdir(dummydir)
-    e = p.create_database(dummydb, dummydir)
+    e = p.create_database(dummydb)
     return True
 
 

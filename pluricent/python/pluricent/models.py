@@ -82,13 +82,14 @@ def create_session(fn = 'pluricent.db'):
     session = DBSession()
     return session
 
-def create_database(fn = 'pluricent.db', datasource = 'pluricent/'):
+def create_database(fn = 'pluricent.db'):
     ''' Initializes a sqlite database with empty tables e.g. Action, Study, Subject, Center, Scanner, T1Image '''
     import os.path as osp
     import os
     from sqlalchemy import create_engine, Table, Column, Integer, String
     from sqlalchemy.orm import sessionmaker
 
+    datasource = osp.dirname(osp.abspath(fn))
     assert(osp.exists(datasource) and len(os.listdir(datasource)) == 0)
 
     if osp.isfile(fn):

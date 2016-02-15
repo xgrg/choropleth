@@ -22,4 +22,13 @@ def test_respect_hierarchy(destdir):
 
     print 'unknown', unknown
     print 'scanned items :', scanned
+
+    # Exceptions
+    exceptions = ['/tmp/pluricent/pluricent.db']
+    nb_excep = 0
+    for e in exceptions:
+       if e in unknown:
+          unknown.remove(e)
+          nb_excep += 1
+    print 'exceptions :', nb_excep
     return len(unknown) == 0
