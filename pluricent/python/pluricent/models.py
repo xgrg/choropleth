@@ -71,6 +71,9 @@ def create_engine(fn = 'pluricent.db'):
     return engine
 
 def create_session(fn = 'pluricent.db'):
+    import os.path as osp
+    if not osp.isfile(fn):
+       raise Exception('File %s is missing'%fn)
     engine = create_engine(fn)
     Base.metadata.bind = engine
     Base.metadata.reflect()
