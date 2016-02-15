@@ -49,6 +49,7 @@ def test_database_exists():
     from pluricent.web import settings
     import pluricent as pl
     db = settings.DATABASE
+    print db
     return osp.isfile(db)
 
 def test_datasource_exists():
@@ -267,16 +268,23 @@ def test_matching_t1images():
 # ===================================================
 # End of tests
 
-def run_tests(results):
+def run_tests(results, is_debug):
     test_functions = __collect_tests__()
     for fname, func in test_functions:
-        results[fname] = func()
+        results[fname] = None
+        if not is_debug:
+            try:
+                results[fname] = func()
+            except Exception as e:
+                print e
+        else:
+            results[fname] = func()
         print '=== %s : %s ==='%(fname, results[fname])
     return results
 
 def run_test(test):
     test_functions = dict(__collect_tests__())
-    test_functions[test]()
+    return test_functions[test]()
 
 if __name__ == '__main__':
     # ==== brand new results ====
@@ -297,7 +305,8 @@ if __name__ == '__main__':
     if args.test_name:
         if not args.test_name in results.keys():
             raise Exception('%s should refer to an existing test (%s)'%(args.test_name, results.keys()))
-        run_test(args.test_name)
+        res = run_test(args.test_name)
+        print '=== %s : %s'%(args.test_name, res)
         import sys
         sys.exit(0)
 
@@ -305,14 +314,7 @@ if __name__ == '__main__':
     from datetime import datetime
     results['last_checked'] = datetime.now().isoformat()
 
-    if args.debug:
-        results = run_tests(results)
-    else:
-        try:
-            results = run_tests(results)
-        except Exception as e:
-            print e
-
+    results = run_tests(results, args.debug)
 
     import json
     import pluricent as pl
