@@ -20,11 +20,11 @@ class MainHandler(BaseHandler):
         username = self.current_user[1:-1]
         import pluricent as pl
         import os.path as osp
-        fn = osp.abspath(settings.DATABASE)
+        fn = osp.abspath(pl.global_settings()['database'])
+        ds = osp.dirname(fn)
         args = {'danger':'', 'datasource':'', 'database':fn}
         if osp.isfile(fn):
-           s = pl.create_session(fn)
-           args.update({'datasource': pl.datasource(s), 'database': fn})
+           args.update({'datasource': ds, 'database': fn})
         else:
            args['danger'] = 'The database %s is missing'%fn
         self.render("html/index.html", username = username, **args)
@@ -40,14 +40,14 @@ class ExploreHandler(BaseHandler):
         default = True
 
         # Retrieving studies from the database
-        s = pl.create_session(settings.DATABASE)
-        studies = pl.studies(s)
+        p = pl.Pluricent(pl.global_settings()['database'])
+        studies = p.studies()
 
         if 'study' in self.request.arguments:
            # Study selected: displaying more info
            study = self.get_argument('study')
            if study in studies:
-              images = pl.t1images(s, study)
+              images = p.t1images(study)
               print study, images
               d = []
               for each in images:

@@ -2,6 +2,9 @@
 # -*- coding: utf-8 -*-
 baseurl = 'http://localhost:8888/'
 credentials = {'username': 'admin', 'password':'admin'}
+db = '/home/pi/pluricent/pluricent.db'
+import pluricent as pl
+from pluricent import global_settings
 
 def __new_dummy__():
     import os.path as osp
@@ -45,9 +48,7 @@ def test_database_exists():
     ''' Returns False if the database as defined in pluricent.settings
     is missing'''
     import os.path as osp
-    from pluricent.web import settings
-    import pluricent as pl
-    db = settings.DATABASE
+    db = global_settings()['database']
     print db
     return osp.isfile(db)
 
@@ -55,11 +56,10 @@ def test_datasource_exists():
     ''' Returns False if the datasource as defined in the database
     is missing'''
     import os.path as osp
-    from pluricent.web import settings
-    import pluricent as pl
-    db = settings.DATABASE
-    s = pl.create_session(db)
-    ds = pl.datasource(s)
+    db = global_settings()['database']
+    print db
+    p = pl.Pluricent(db)
+    ds = osp.dirname(db)
     return osp.isdir(ds)
 
 
@@ -74,6 +74,7 @@ def test_login_logout():
    Returns True if the 3 tests are successful'''
    import requests
    print 'Check the server is running'
+   baseurl = global_settings()['baseurl']
    url = baseurl + 'auth/login/'
    data = {'username': 'toto', 'password':'admin'}
    try:
@@ -100,6 +101,7 @@ def test_invalid_study():
    ''' Logs in and acts as if just asked for a non-existing study.
    Returns True if successfully redirected with an information message'''
    import requests
+   baseurl = global_settings()['baseurl']
    url = baseurl + 'auth/login/'
    s = requests.Session()
    r = s.post(url, data=credentials)
@@ -113,7 +115,7 @@ def test_invalid_study():
 def test_valid_study():
 #FIXME
    import requests
-   import pluricent as pl
+   baseurl = global_settings()['baseurl']
    url = baseurl + 'auth/login/'
    r = requests.post(url, data=credentials)
    url = baseurl + 'explore/?study=study01'
@@ -128,44 +130,42 @@ def test_valid_study():
 
 def test_create_database():
     '''Creates a dummy database and repository in /tmp'''
-    import pluricent as p
     import os
 
     dummydb, dummydir = __new_dummy__()
 
     os.mkdir(dummydir)
-    e = p.create_database(dummydb)
+    print 'creating', dummydb
+    p = pl.Pluricent(dummydb, create_database = True)
     return True
 
 
 def test_create_study():
     ''' Creates a study in the last dummy database created'''
-    import pluricent as p
 
     dummydb, dummydir = __last_dummy__()
     print 'Reading %s (%s)'%(dummydb, dummydir)
 
-    s = p.create_session(dummydb)
-    p.add_study(s, 'study01')
-    studies = p.studies(s)
+    p = pl.Pluricent(dummydb)
+    p.add_study('study01')
+    studies = p.studies()
     print 'studies', studies
     return True
 
 def test_create_subjects():
     ''' Adds subjects to the first study of the last dummy
     database created'''
-    import pluricent as p
 
     dummydb, dummydir = __last_dummy__()
     print 'Reading %s (%s)'%(dummydb, dummydir)
 
-    s = p.create_session(dummydb)
+    p = pl.Pluricent(dummydb)
 
-    studies = p.studies(s)
+    studies = p.studies()
     print 'adding subjects in %s'%studies[0]
     subjects = ['subj01','subj02']
-    p.add_subjects(s, subjects, studies[0])
-    subjects = p.subjects(s, studies[0])
+    p.add_subjects(subjects, studies[0])
+    subjects = p.subjects(studies[0])
     print 'subjects', subjects
     return True
 
@@ -175,13 +175,11 @@ def test_create_subjects():
 
 def test_studies():
     ''' Compares studies between the repository and the database '''
-    from pluricent.web import settings
-    import pluricent as pl
     import os, os.path as osp
-    db = settings.DATABASE
-    s = pl.create_session(db)
-    ds = pl.datasource(s)
-    studies_db = list(set([pl.study_dir(s, e) for e in pl.studies(s)]))
+    db = global_settings()['database']
+    p = pl.Pluricent(db)
+    ds = p.datasource()
+    studies_db = list(set([p.study_dir(e) for e in p.studies()]))
     studies_ds = list(set([e for e in os.listdir(ds) \
             if osp.isdir(osp.join(ds,e)) and not e in ['.','..']]))
     print studies_db, studies_ds
@@ -189,15 +187,13 @@ def test_studies():
 
 def test_unique_subjects():
     ''' Checks that subjects identifiers are unique in every study '''
-    from pluricent.web import settings
-    import pluricent as pl
     import os, os.path as osp
-    db = settings.DATABASE
-    s = pl.create_session(db)
-    studies = pl.studies(s)
+    db = global_settings()['database']
+    p = pl.Pluricent(db)
+    studies = p.studies()
     unique = True
     for each in studies:
-        subjects = pl.subjects(s, each)
+        subjects = p.subjects(each)
         if not len(subjects) == len(set(subjects)):
             unique = False
             print each
@@ -208,10 +204,11 @@ def test_respect_hierarchy():
     ''' Checks that every file/folder in the repository is identified by the hierarchy
     Returns True if the unknown list is empty'''
     from pluricent import checkbase as cb
-    import pluricent as pl
-    from pluricent.web import settings
-    s = pl.create_session(settings.DATABASE)
-    destdir = pl.datasource(s)
+    import os.path as osp
+    db = global_settings()['database']
+    print 'db', db
+    p = pl.Pluricent(db)
+    destdir = osp.dirname(db)
 
     from pluricent import tests as t
 
@@ -221,10 +218,10 @@ def test_matching_t1images():
     ''' Checks if T1 images entries in the database are matching with
     existing files in the repository'''
     from pluricent import checkbase as cb
-    import pluricent as pl
-    from pluricent.web import settings
-    s = pl.create_session(settings.DATABASE)
-    destdir = pl.datasource(s)
+    import os.path as osp
+    db = global_settings()['database']
+    p = pl.Pluricent(db)
+    destdir = osp.dirname(db)
 
     cl = cb.CloudyCheckbase(destdir)
     import os
@@ -242,9 +239,9 @@ def test_matching_t1images():
             if not res is None:
                 datatype, att = res
                 if datatype == 'raw':
-                    raw_files.append(fp[len(destdir):])
+                    raw_files.append(fp[len(destdir)+1:])
 
-    raw_entries = [e.path for e in pl.t1images(s)]
+    raw_entries = [e.path for e in p.t1images()]
 
     # comparing raw_files and raw_entries
     matching = True
@@ -298,6 +295,7 @@ if __name__ == '__main__':
     parser.add_argument("--debug", help="Debug mode: raise exceptions (default: skips errors\
             until the end, writes the output in json file)", action="store_true")
     parser.add_argument("-t", dest='test_name', type=str, help="Run specific test (in debug mode)", required=False)
+
     args = parser.parse_args()
 
     # ==== run specific test ? ====
@@ -316,10 +314,13 @@ if __name__ == '__main__':
     results = run_tests(results, args.debug)
 
     import json
-    import pluricent as pl
     import os.path as osp
     print '===================================================================================================='
     fp = osp.abspath(osp.join(osp.dirname(pl.__file__), '..', '..', 'web', 'json', 'sysdiag.json'))
     print 'Writing json... %s'%fp
     json.dump(results, open(fp, 'w'), indent=2)
+    print '====================================================================='
+    print 'baseurl:', global_settings()['baseurl']
+    print 'database:', global_settings()['database']
+    print '====================================================================='
 

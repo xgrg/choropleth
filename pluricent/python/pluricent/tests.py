@@ -24,7 +24,8 @@ def test_respect_hierarchy(destdir):
     print 'scanned items :', scanned
 
     # Exceptions
-    exceptions = ['/tmp/pluricent/pluricent.db']
+    exceptions = ['pluricent.db']
+    exceptions = [osp.join(destdir, e) for e in exceptions]
     nb_excep = 0
     for e in exceptions:
        if e in unknown:

@@ -88,9 +88,9 @@ def create_database(fn = 'pluricent.db'):
     import os
     from sqlalchemy import create_engine, Table, Column, Integer, String
     from sqlalchemy.orm import sessionmaker
-
     datasource = osp.dirname(osp.abspath(fn))
-    assert(osp.exists(datasource) and len(os.listdir(datasource)) == 0)
+    ld = os.listdir(datasource)
+    assert(osp.exists(datasource) and ld in [[], ['pluricent.db']])
 
     if osp.isfile(fn):
        print 'deleting all contents from %s'%fn
