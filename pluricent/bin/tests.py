@@ -182,7 +182,7 @@ def test_studies():
     studies_db = list(set([p.study_dir(e) for e in p.studies()]))
     studies_ds = list(set([e for e in os.listdir(ds) \
             if osp.isdir(osp.join(ds,e)) and not e in ['.','..']]))
-    print studies_db, studies_ds
+    print 'studies in database:', studies_db, '- studies in repo:', studies_ds
     return studies_db == studies_ds
 
 def test_unique_subjects():
@@ -258,8 +258,66 @@ def test_matching_t1images():
     print 'entries in db:', len(raw_entries)
     return matching
 
+def test_actions():
+    ''' Checks that every action starts with a recognized code
+    e.g. add_study, add_subject, add_image...'''
 
+    import pluricent as pl
+    import json
+    p = pl.Pluricent(pl.global_settings()['database'])
+    actions = [json.loads(each.action) for each in p.actions()]
+    authorized = True
+    recognized = ['add_study', 'add_subject', 'add_image']
+    for each in actions:
+        if not each[0] in recognized:
+            authorized = False
+            print each, 'not recognized'
+            break
+    return authorized
 
+def test_each_entry_has_action():
+    ''' Checks every entry in tables Subject, T1Image, Study
+    has an associated action in Action'''
+    import pluricent as pl
+    import json
+    p = pl.Pluricent(pl.global_settings()['database'])
+    studies = p.studies()
+    actions = [json.loads(each.action) for each in p.actions()]
+    each_has_action = True
+
+    # sorting actions
+    recognized = ['add_study', 'add_subject', 'add_image']
+    sorted_actions = {}
+    for a in actions:
+        if a[0] in recognized:
+            sorted_actions.setdefault(a[0], []).append(a)
+
+    for s in studies:
+        found = 0
+        for each in sorted_actions['add_study']:
+            if s in each:
+                found += 1
+        if found != 1:
+            each_has_action = False
+            print s, 'found %s times'%found
+        for subject in p.subjects(s):
+            found = 0
+            for each in sorted_actions['add_subject']:
+                if s in each and subject in each:
+                    found += 1
+            if found != 1:
+                each_has_action = False
+                print subject, 'in', s, 'found %s times'%found
+            for image in p.t1images(s, subject):
+                found = 0
+                for each in sorted_actions['add_image']:
+                    if s in each and subject in each and image.path in each:
+                        found += 1
+                if found != 1:
+                    each_has_action = False
+                    print image, 'from', subject, 'in', s, 'found %s times'%found
+
+    return each_has_action
 
 # ===================================================
 # End of tests

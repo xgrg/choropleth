@@ -63,12 +63,17 @@ class T1Image(Base):
   comments = Column(String(100))
   path = Column(String(100), nullable=False, unique=True)
 
+class Measurements(Base):
+  __tablename__ = 'measurements'
+  id = Column(Integer, primary_key=True)
+  subject_id = Column(Integer, ForeignKey('subject.id'), nullable=False)
+
 
 def create_engine(fn = 'pluricent.db'):
-    #FIXME check that fn is a filename and it exists
-    from sqlalchemy import create_engine
-    engine = create_engine('sqlite:///%s'%fn, encoding='utf-8')
-    return engine
+   #FIXME check that fn is a filename and it exists
+   from sqlalchemy import create_engine
+   engine = create_engine('sqlite:///%s'%fn, encoding='utf-8')
+   return engine
 
 def create_session(fn = 'pluricent.db'):
     import os.path as osp
@@ -82,7 +87,7 @@ def create_session(fn = 'pluricent.db'):
     session = DBSession()
     return session
 
-def create_database(fn = 'pluricent.db'):
+def create_database(fn = 'pluricent.db', from_existing_repository = False):
     ''' Initializes a sqlite database with empty tables e.g. Action, Study, Subject, Center, Scanner, T1Image '''
     import os.path as osp
     import os
@@ -90,7 +95,8 @@ def create_database(fn = 'pluricent.db'):
     from sqlalchemy.orm import sessionmaker
     datasource = osp.dirname(osp.abspath(fn))
     ld = os.listdir(datasource)
-    assert(osp.exists(datasource) and ld in [[], ['pluricent.db']])
+    if not from_existing_repository:
+       assert(osp.exists(datasource) and ld in [[], ['pluricent.db']])
 
     if osp.isfile(fn):
        print 'deleting all contents from %s'%fn
