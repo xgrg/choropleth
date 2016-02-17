@@ -14,21 +14,28 @@ class Pluricent():
         self.filepath = osp.abspath(filepath)
         self.session = models.create_session(filepath)
         self.settings = global_settings()
+        if self.settings['database'] != self.filepath:
+           print 'Warning : differences in .pluricent_settings.json (%s) and given filepath (%s)'\
+                 %(self.settings['database'], self.filepath)
 
     def datasource(self):
         import os.path as osp
         return osp.dirname(osp.abspath(self.filepath))
 
 
-    def add_study(self, name, description_file=None, readme_file=None):
+    def add_study(self, name, directory=None, description_file=None, readme_file=None, create_folder=True):
         import os.path as osp
         import os, models
         ds = self.datasource()
         assert(osp.isdir(ds))
         s = self.studies()
-        directory = 'ds%05d'%(len(s)+1)
-        assert(not osp.exists(osp.join(ds, directory)))
-        os.mkdir(osp.join(ds, directory))
+
+        if directory is None:
+           directory = 'ds%05d'%(len(s)+1)
+
+        if create_folder:
+           assert(not osp.exists(osp.join(ds, directory)))
+           os.mkdir(osp.join(ds, directory))
 
         new_study = models.Study(id=(len(s)+1), name=name, directory=directory, \
             description_file=description_file, readme_file=readme_file)
@@ -38,7 +45,10 @@ class Pluricent():
 
     def study_id(self, study):
         from models import Study
-        return self.session.query(Study.id).filter(Study.name==study).one()[0]
+        try:
+           return self.session.query(Study.id).filter(Study.name==study).one()[0]
+        except base.NoResultFound:
+           raise base.NoResultFound('%s does not exist'%study)
 
     def study_dir(self, study):
         from models import Study
@@ -53,16 +63,13 @@ class Pluricent():
         return self.session.query(Subject.id).filter(Subject.identifier==identifier).one()[0]
 
     def studies(self):
-        import models
         return [each.name for each in self.session.query(models.Study).all()]
 
     def subjects(self, study):
-        import models
         study_id = self.study_id(study)
         return [each.identifier for each in self.session.query(models.Subject).filter(models.Subject.study_id==study_id).all()]
 
     def t1images(self, study=None, subject=None):
-        import models
         if not study is None:
            study_id = self.study_id(study)
            if subject is None:
@@ -74,8 +81,10 @@ class Pluricent():
 
 
     def t1image_from_path(self, path):
-        import models
         return self.session.query(models.T1Image).filter(models.T1Image.path==path).one()[0]
+
+    def actions(self):
+        return self.session.query(models.Action).all()
 
 
     def add_center(self, name, location=None):
@@ -84,7 +93,7 @@ class Pluricent():
         self.session.add(new_center)
         self.session.commit()
 
-    def add_subjects(self, subjects, study):
+    def add_subjects(self, subjects, study, create_folders=True):
         import os.path as osp
         import os
         from pluricent.models import Study, Subject
@@ -93,13 +102,14 @@ class Pluricent():
         studydir = self.session.query(Study.directory).filter(Study.id==study_id).one()[0]
         assert(osp.isdir(osp.join(ds, studydir)))
         for s in subjects:
-            assert(not osp.exists(osp.join(ds, studydir, s)))
-            os.mkdir(osp.join(ds, studydir, s))
+            if create_folders:
+               assert(not osp.exists(osp.join(ds, studydir, s)))
+               os.mkdir(osp.join(ds, studydir, s))
             new_subject = Subject(identifier=s, study_id=study_id)
             self.session.add(new_subject)
         self.session.commit()
 
-    def add_t1image(session, path, study, subject):
+    def add_t1image(self, path, study, subject):
         from pluricent.models import T1Image
         try:
            subj_id = self.subject_id(study, subject)
@@ -117,14 +127,23 @@ class Pluricent():
     def add_action(self, action):
         from time import gmtime, strftime
         from models import Action
+        import json
         timestamp = strftime("%Y-%m-%d %H:%M:%S", gmtime())
-        new_action = Action(action=str(action), timestamp=timestamp)
+        new_action = Action(action=json.dumps(action), timestamp=timestamp)
         self.session.add(new_action)
         self.session.commit()
 
+    def add_actions(self, actions):
+        from time import gmtime, strftime
+        from models import Action
+        import json
+        for action in actions:
+           timestamp = strftime("%Y-%m-%d %H:%M:%S", gmtime())
+           new_action = Action(action=json.dumps(action), timestamp=timestamp)
+           self.session.add(new_action)
+        self.session.commit()
 
     def make_actions(self, actions):
-        from pluricent.models import Action
 
         print '%s actions to perform'%len(actions)
         for i, a in enumerate(actions):
@@ -132,43 +151,65 @@ class Pluricent():
             self.add_action(a)
 
             if a[0] == 'add_study':
-                self.add_study(a[1])
+                self.add_study(name=a[1], directory=a[2], description_file=a[3], create_folder=False)
 
             elif a[0] == 'add_subject':
-                self.add_subjects([a[1]], a[2])
+                self.add_subjects(subjects=[a[1]], study=a[2], create_folders=False)
 
-            elif a[0] == 'add_t1image':
-                self.add_t1image(a[1], a[2], a[3])
+            elif a[0] == 'add_image':
+                self.add_t1image(path=a[1], study=a[2], subject=a[3])
 
 
-    def populate_from_directory(self, directory, fn = 'pluricent.db'):
+    def populate_from_directory(self, rootdir):
+        '''directory should be the root dir containing multiple studies'''
         unknown = []
         import os
         import os.path as osp
         from pluricent import checkbase as cb
         from pluricent import tests
-        assert(tests.test_respect_hierarchy(directory))
-        cl = cb.CloudyCheckbase(directory)
+        dirlist = [e for e in os.listdir(rootdir) if osp.isdir(osp.join(rootdir, e)) and not e in ['.', '..']]
+        filelist = [e for e in os.listdir(rootdir) if osp.isfile(osp.join(rootdir, e))]
+        assert(filelist == ['pluricent.db'])
         actions = []
 
-        for root, dirs, files in os.walk(directory):
-            for f in files:
-                fp = osp.join(root, f)
-                res = cb.parsefilepath(fp, cl.patterns)
-                if not res is None:
-                    datatype, att = res
-                    if datatype in  'raw':
-                        study_dir = att['database'][len(directory):]
-                        print study_dir
-                        study = self.study_from_dir(study_dir)
-                        print study
 
-                        actions.append(['add_t1image', fp[len(directory):], study, att['subject']])
+        # Then, go for the browsing
+        for each in dirlist:
+           studydir = osp.join(rootdir, each)
+           print 'processing %s'%studydir
+           assert(tests.test_respect_hierarchy(studydir))
+           cl = cb.CloudyCheckbase(studydir)
+
+           # first look for dataset_description.json and add study
+           fp = cb.getfilepath('dataset_description', {'database': studydir}, cl.patterns)
+           if not osp.exists(fp):
+              print fp, 'is missing'
+           import json
+           studyname = json.load(open(fp))['name']
+           actions.append(['add_study', studyname, studydir[len(rootdir)+1:], fp[len(osp.dirname(fp))+1:] ])
+           print 'study %s (%s)'%(studyname, studydir)
+
+           for s in [e for e in os.listdir(studydir) if osp.isdir(osp.join(studydir, e))]:
+              actions.append(['add_subject', s, studyname])
+
+           for root, dirs, files in os.walk(studydir):
+               for f in files:
+                   fp = osp.join(root, f)
+                   res = cb.parsefilepath(fp, cl.patterns)
+                   if not res is None:
+                       datatype, att = res
+                       if datatype in  'raw':
+                           actions.append(['add_image', fp[len(rootdir)+1:], studyname, att['subject']])
 
         print actions
         print len(actions), 'actions to make'
         ans = raw_input('proceed ? y/n')
         if ans == 'y':
+            print 'warning: erasing database contents'
+            ans = raw_input('proceed ? y/n')
+            if ans == 'y':
+               models.create_database(self.filepath, from_existing_repository=True)
+
             self.make_actions(actions)
 
 
