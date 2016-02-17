@@ -13,10 +13,6 @@ class Pluricent():
             models.create_database(filepath)
         self.filepath = osp.abspath(filepath)
         self.session = models.create_session(filepath)
-        self.settings = global_settings()
-        if self.settings['database'] != self.filepath:
-           print 'Warning : differences in .pluricent_settings.json (%s) and given filepath (%s)'\
-                 %(self.settings['database'], self.filepath)
 
     def datasource(self):
         import os.path as osp
@@ -32,6 +28,7 @@ class Pluricent():
 
         if directory is None:
            directory = 'ds%05d'%(len(s)+1)
+           print 'No directory provided. %s will be stored in %s'%(name, directory)
 
         if create_folder:
            assert(not osp.exists(osp.join(ds, directory)))
@@ -160,7 +157,7 @@ class Pluricent():
                 self.add_t1image(path=a[1], study=a[2], subject=a[3])
 
 
-    def populate_from_directory(self, rootdir):
+    def populate_from_directory(self, rootdir, answer_yes=False):
         '''directory should be the root dir containing multiple studies'''
         unknown = []
         import os
@@ -203,11 +200,11 @@ class Pluricent():
 
         print actions
         print len(actions), 'actions to make'
-        ans = raw_input('proceed ? y/n')
-        if ans == 'y':
+        ans = answer_yes or raw_input('proceed ? y/n')=='y'
+        if ans:
             print 'warning: erasing database contents'
-            ans = raw_input('proceed ? y/n')
-            if ans == 'y':
+            ans = answer_yes or raw_input('proceed ? y/n')=='y'
+            if ans:
                models.create_database(self.filepath, from_existing_repository=True)
 
             self.make_actions(actions)

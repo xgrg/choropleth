@@ -169,6 +169,21 @@ def test_create_subjects():
     print 'subjects', subjects
     return True
 
+def test_populate():
+    ''' Populates a dummy database from dummy dataset '''
+
+    import os.path as osp
+    dummydir = osp.join(osp.split(osp.dirname(__file__))[0], 'data', 'dummyds')
+    dummydb = osp.join(dummydir, 'pluricent.db')
+    assert(osp.isdir(dummydir))
+    assert(osp.isfile(dummydb))
+    print 'Reading %s'%dummydb
+
+    p = pl.Pluricent(dummydb)
+    p.populate_from_directory(dummydir, answer_yes=True)
+    return True
+
+
 
 #================================
 # Database-based tests (on prod)
