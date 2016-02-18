@@ -90,8 +90,17 @@ class Pluricent():
     def t1image_from_path(self, path):
         return self.session.query(models.T1Image).filter(models.T1Image.path==path).one()[0]
 
-    def measurements(self):
-        return self.session.query(models.Measurement).all()
+    def measurements(self, study=None, structure=None):
+        if study and not study in self.studies():
+           raise base.NoResultFound('%s not found in %s'%(study, self.studies()))
+        if structure and not structure in [e.structure for e in self.measurements()]:
+           raise base.NoResultFound('%s not found in existing measurements'%structure)
+        a = self.session.query(models.Measurement)
+        if study:
+            a = a.join(models.T1Image).join(models.Subject).filter(models.Study.name == study)
+        if structure:
+            a = a.filter(models.Measurement.structure == structure)
+        return a.all()
 
     def actions(self):
         return self.session.query(models.Action).all()
