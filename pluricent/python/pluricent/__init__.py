@@ -250,6 +250,42 @@ class Pluricent():
             self.make_actions(actions)
 
 
+    def convert_csvfile(self, csvfile, study, output):
+       ''' Takes a csv with the first column for subjects, and converts it with a first column
+       for image_ids
+       Works only when there is only one image possible per subject'''
+       import csv
+       header = ['subject', 'structure', 'side', 'measurement', 'unit', 'value', 'software', 'comments']
+       w = open(output, 'w')
+       w.write('%s\n'%','.join(['image_id', 'structure', 'side', 'measurement', 'unit', 'value', 'software', 'comments']))
+       images0 = self.t1images(study=study)
+       images = {}
+       for i in images0:
+          images.setdefault(i.subject_id, []).append(i.id)
+       images = dict([(self.subject_from_id(k), v) for k,v in images.items()])
+
+       with open(csvfile, 'rb') as f:
+          csvreader = csv.reader(f, delimiter=',', quotechar='|')
+          for i, row in enumerate(csvreader):
+             if i==0:
+                if row!=header:
+                   raise Exception('%s differs from model %s'%(row, header))
+                continue
+             subject = str(row[0])
+             if not subject in images:
+                print 'skipping', subject
+                continue
+             elif len(images[subject]) != 1:
+                w.close()
+                raise Exception('%s images found for subject %s in %s'%(len(images[subject]), subject, study))
+             line = [str(int(images[subject][0]))]
+             line.extend(row[1:])
+             w.write('%s\n'%','.join(line))
+
+       w.close()
+
+
+
 def global_settings():
     ''' ==== load setting from json ===='''
     import os.path as osp
