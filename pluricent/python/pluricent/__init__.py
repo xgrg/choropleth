@@ -175,15 +175,20 @@ class Pluricent():
         for i, a in enumerate(actions):
             print 'action %s/%s'%(i, len(actions)), a
             self.add_action(a)
+            action_type, params = a
+            if action_type == 'add_study':
+                params['create_folder'] = False
+                self.add_study(**params)
 
-            if a[0] == 'add_study':
-                self.add_study(name=a[1], directory=a[2], description_file=a[3], create_folder=False)
+            elif action_type == 'add_subject':
+                params['create_folders'] = False
+                self.add_subjects(**params)
 
-            elif a[0] == 'add_subject':
-                self.add_subjects(subjects=[a[1]], study=a[2], create_folders=False)
+            elif action_type == 'add_image':
+                self.add_t1image(**params)
 
-            elif a[0] == 'add_image':
-                self.add_t1image(path=a[1], study=a[2], subject=a[3])
+            elif action_type == 'add_measurements':
+                self.insert_from_csv(params['csvfile'])
 
 
     def populate_from_directory(self, rootdir):
