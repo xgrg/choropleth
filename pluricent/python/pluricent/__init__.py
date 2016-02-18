@@ -250,6 +250,46 @@ class Pluricent():
             self.make_actions(actions)
 
 
+    def insert_from_csv(self, csvfile):
+       ''' import entries from a csvfile into the database
+       The csv file must have the good format
+       '''
+       import csv, tests
+
+       actions = []
+       assert(tests.test_measurements_format(csvfile))
+       header = ['image_id', 'structure', 'side', 'measurement', 'unit', 'value', 'software', 'comments']
+       with open(csvfile, 'rb') as f:
+          csvreader = csv.reader(f, delimiter=',', quotechar='|')
+          for i, row in enumerate(csvreader):
+             if i==0:
+                if row!=header:
+                   raise Exception('%s differs from model %s'%(row, header))
+                continue
+
+             params = {}
+             params['image_id'] = int(row[0])
+             params['structure'] = str(row[1])
+             if row[2] != 'n/a':
+                assert(row[2] in ['left', 'right'])
+                params['side'] = row[2]
+             params['measurement'] = str(row[3])
+             params['unit'] = str(row[4])
+             params['value'] = float(row[5])
+             if row[6] != 'n/a':
+                params['software'] = str(row[6])
+             if row[7] != 'n/a':
+                params['comments'] = str(row[7])
+
+             actions.append(params)
+
+       #print actions
+       print len(actions), 'measurements to insert'
+       for params in actions:
+           # removing 'n/a' parameters
+           params2 = dict([(k,v) for k,v in params.items() if v != 'n/a'])
+           self.add_measurement(**params2)
+
     def convert_csvfile(self, csvfile, study, output):
        ''' Takes a csv with the first column for subjects, and converts it with a first column
        for image_ids
