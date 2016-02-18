@@ -31,6 +31,24 @@ class MainHandler(BaseHandler):
 
 class AnalyzeHandler(BaseHandler):
     @tornado.web.authenticated
+
+    def post(self):
+        import pluricent as pl
+        import numpy as np
+        import json
+        structure = self.get_argument('id')
+        print structure
+        args = {}
+        p = pl.Pluricent(pl.global_settings()['database'])
+        measurements = [e.value for e in p.measurements(structure=structure)]
+        args['data'], args['labels'] = np.histogram(measurements)
+        args = dict([(k, json.dumps([int(e) for e in v.tolist()])) for k,v in args.items()])
+        args['structure'] = structure
+        res = json.dumps(args)
+        print res
+        self.write(res)
+        return None
+
     def get(self):
         username = self.current_user[1:-1]
         import pluricent as pl

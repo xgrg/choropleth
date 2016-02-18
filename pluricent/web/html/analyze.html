@@ -44,8 +44,22 @@
 
     <div class="container">
       <div class="starter-template">
-         <p>Left-Caudate volumes</p>
+         <div class="dropdown">
+           <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+             Dropdown
+             <span class="caret"></span>
+           </button>
+           <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+             <li class="structure"><a href="#">Left-Caudate</a></li>
+             <li class="structure"><a href="#">Right-Caudate</a></li>
+             <li role="separator" class="divider"></li>
+             <li><a href="#">Separated link</a></li>
+           </ul>
+         </div>
+         <p><span id="structure_name">Left-Caudate</span> volumes</p>
+         <div id="canvas-wrapper">
          <canvas id="myChart" width="600" height="200"></canvas>
+         </div>
 
       </div> <!-- /container -->
       <hr>
@@ -78,6 +92,39 @@
                  }]
            };
            var myBarChart = new Chart(ctx).Bar(data, {});
+           $("li").click(function(e){
+               if ($(this).attr("class") == 'structure'){
+                  $.ajax({
+                    type: "POST",
+                    url: '',
+                    data: 'id='+$(this).first("a").text(),
+                    success: function(data){
+                       args = JSON.parse(data);
+                       $("#structure_name").text(args['structure']);
+                       console.log(JSON.parse(args['data']));
+                       console.log(JSON.parse(args['labels']));
+                       $("#canvas-wrapper").html("").html('<canvas id="myChart" width="600" height="200"></canvas>');
+                       var ctx = document.getElementById("myChart").getContext("2d");
+                       var data = {
+                         labels: JSON.parse(args['labels']), //["January", "February", "March", "April", "May", "June", "July"],
+                         datasets: [
+                             {
+                                 label: "My First dataset",
+                                 fillColor: "rgba(220,220,220,0.5)",
+                                 strokeColor: "rgba(220,220,220,0.8)",
+                                 highlightFill: "rgba(220,220,220,0.75)",
+                                 highlightStroke: "rgba(220,220,220,1)",
+                                 data: JSON.parse(args['data']) //[65, 59, 80, 81, 56, 55, 40]
+                             }]
+                       };
+                       //myBarChart.update();
+                       var myBarChart = new Chart(ctx).Bar(data, {});
+
+                     },
+                    dataType: "text"
+                  });
+               }
+           });
     </script>
   </body>
 </html>
