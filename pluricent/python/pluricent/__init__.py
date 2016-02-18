@@ -191,16 +191,18 @@ class Pluricent():
                 self.insert_from_csv(params['csvfile'])
 
 
-    def populate_from_directory(self, rootdir):
+    def populate_from_directory(self, rootdir, answer_yes=False):
         '''directory should be the root dir containing multiple studies'''
         unknown = []
         import os
         import os.path as osp
         from pluricent import checkbase as cb
         from pluricent import tests
+        rootdir = osp.abspath(rootdir)
         dirlist = [e for e in os.listdir(rootdir) if osp.isdir(osp.join(rootdir, e)) and not e in ['.', '..']]
         filelist = [e for e in os.listdir(rootdir) if osp.isfile(osp.join(rootdir, e))]
-        assert(filelist == ['pluricent.db'])
+        if not filelist == ['pluricent.db']:
+           raise EXception('%s should contain only pluricent.db and study folder (contains %s)'%(rootdir, filelist))
         actions = []
 
 
@@ -217,11 +219,13 @@ class Pluricent():
               print fp, 'is missing'
            import json
            studyname = json.load(open(fp))['name']
-           actions.append(['add_study', studyname, studydir[len(rootdir)+1:], fp[len(osp.dirname(fp))+1:] ])
+           actions.append(['add_study', {'name': studyname,
+                                         'directory':studydir[len(rootdir)+1:],
+                                         'description_file':fp[len(osp.dirname(fp))+1:]} ])
            print 'study %s (%s)'%(studyname, studydir)
 
            for s in [e for e in os.listdir(studydir) if osp.isdir(osp.join(studydir, e))]:
-              actions.append(['add_subject', s, studyname])
+              actions.append(['add_subject', {'subjects':[s], 'study':studyname}])
 
            for root, dirs, files in os.walk(studydir):
                for f in files:
@@ -229,16 +233,18 @@ class Pluricent():
                    res = cb.parsefilepath(fp, cl.patterns)
                    if not res is None:
                        datatype, att = res
-                       if datatype in  'raw':
-                           actions.append(['add_image', fp[len(rootdir)+1:], studyname, att['subject']])
+                       if datatype == 'raw':
+                          actions.append(['add_image', {'path':fp[len(rootdir)+1:], 'study':studyname, 'subject':att['subject']}])
+                       elif datatype == 'measurements':
+                          actions.append(['add_measurements', {'csvfile':fp[len(rootdir)+1:]}])
 
         print actions
         print len(actions), 'actions to make'
-        ans = raw_input('proceed ? y/n')
-        if ans == 'y':
+        ans = answer_yes or raw_input('proceed ? y/n')=='y'
+        if ans:
             print 'warning: erasing database contents'
-            ans = raw_input('proceed ? y/n')
-            if ans == 'y':
+            ans = answer_yes or raw_input('proceed ? y/n')=='y'
+            if ans:
                models.create_database(self.filepath, from_existing_repository=True)
 
             self.make_actions(actions)
