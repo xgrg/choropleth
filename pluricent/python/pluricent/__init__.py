@@ -10,7 +10,7 @@ class Pluricent():
         if not osp.isfile(filepath) and not create_database:
             raise Exception('%s must be an existing file'%filepath)
         if create_database:
-            models.create_database(filepath)
+            models.create_database(filepath, from_existing_repository=True)
         self.filepath = osp.abspath(filepath)
         self.session = models.create_session(filepath)
 
@@ -28,6 +28,7 @@ class Pluricent():
 
         if directory is None:
            directory = 'ds%05d'%(len(s)+1)
+           print 'No directory provided. %s will be stored in %s'%(name, directory)
 
         if create_folder:
            assert(not osp.exists(osp.join(ds, directory)))
