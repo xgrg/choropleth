@@ -42,39 +42,12 @@
       </div>
     </nav>
 
-    <!-- Main jumbotron for a primary marketing message or call to action -->
-    <div class="jumbotron">
     <div class="container">
-    </div><!-- /container -->
-      <div class="container">
-        <h1 id="hello">Hello, {{ username }}</h1>
-        <p>This is the main page.</p>
-        <p>datasource: {{datasource}}</p>
-        <p>database: {{database}}</p>
-        <p><a class="btn btn-primary btn-lg" href="#" role="button">Learn more &raquo;</a></p>
-      </div>
-    </div>
+      <div class="starter-template">
+         <p>Left-Caudate volumes</p>
+         <canvas id="myChart" width="600" height="200"></canvas>
 
-    <div class="container">
-      <!-- Example row of columns -->
-      <div class="row">
-        <div class="col-md-4">
-          <h2>Explore</h2>
-          <p><img style="width:60%" src="{{static_url("images/explore.png")}}"></p>
-          <p><a class="btn btn-default" href="explore/" role="button">View details &raquo;</a></p>
-        </div>
-        <div class="col-md-4">
-          <h2>Analyze</h2>
-          <p><img style="width:60%" src="{{static_url("images/chart.png")}}"></p>
-          <p><a class="btn btn-default" href="analyze/" role="button">View details &raquo;</a></p>
-       </div>
-        <div class="col-md-4">
-          <h2>Control</h2>
-          <p><img style="width:60%" src="{{static_url("images/sysdiag.png")}}"></p>
-          <p><a class="btn btn-default" href="sysdiag/" role="button">View details &raquo;</a></p>
-        </div>
-      </div>
-
+      </div> <!-- /container -->
       <hr>
 
       <footer>
@@ -87,16 +60,24 @@
     ================================================== -->
     <!-- Placed at the end of the document so the pages load faster -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="{{static_url("vendor/Chart.min.js")}}"></script>
     <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
     <script>
-    $('div.jumbotron div.container').first().html(function(){
-       warning = '{{danger}}';
-       html = $(this).html();
-       if (warning.length != 0){
-          html = '<div id="warning" class="alert alert-danger" role="danger">'+warning+'</div>' + html;
-       }
-       return html;
-    });
+           Chart.defaults.global.responsive = true;
+           var ctx = document.getElementById("myChart").getContext("2d");
+           var data = {
+             labels: JSON.parse("{{labels}}"), //["January", "February", "March", "April", "May", "June", "July"],
+             datasets: [
+                 {
+                     label: "My First dataset",
+                     fillColor: "rgba(220,220,220,0.5)",
+                     strokeColor: "rgba(220,220,220,0.8)",
+                     highlightFill: "rgba(220,220,220,0.75)",
+                     highlightStroke: "rgba(220,220,220,1)",
+                     data: JSON.parse("{{data}}") //[65, 59, 80, 81, 56, 55, 40]
+                 }]
+           };
+           var myBarChart = new Chart(ctx).Bar(data, {});
     </script>
   </body>
 </html>

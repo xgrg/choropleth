@@ -64,7 +64,7 @@ class T1Image(Base):
   path = Column(String(100), nullable=False, unique=True)
 
 class Measurement(Base):
-  __tablename__ = 'measurement'
+  __tablename__ = 'measurements'
   id = Column(Integer, primary_key=True)
   image_id = Column(Integer, ForeignKey('t1image.id'), nullable=False)
   structure = Column(String(25), nullable=False)
@@ -179,7 +179,7 @@ def create_database(fn = 'pluricent.db', from_existing_repository = False):
         path = Column(String(100), nullable=False, unique=True)
 
     class Measurement(Base):
-        __tablename__ = 'measurement'
+        __tablename__ = 'measurements'
         id = Column(Integer, primary_key=True)
         image_id = Column(Integer, ForeignKey('t1image.id'), nullable=False)
         structure = Column(String(25), nullable=False)

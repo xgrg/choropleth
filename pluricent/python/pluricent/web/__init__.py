@@ -29,6 +29,21 @@ class MainHandler(BaseHandler):
            args['danger'] = 'The database %s is missing'%fn
         self.render("html/index.html", username = username, **args)
 
+class AnalyzeHandler(BaseHandler):
+    @tornado.web.authenticated
+    def get(self):
+        username = self.current_user[1:-1]
+        import pluricent as pl
+        import numpy as np
+        import json
+        args = {}
+        p = pl.Pluricent(pl.global_settings()['database'])
+        measurements = [e.value for e in p.measurements(structure='Left-Caudate')]
+        args['data'], args['labels'] = np.histogram(measurements)
+        args = dict([(k, json.dumps([int(e) for e in v.tolist()])) for k,v in args.items()])
+
+        self.render("html/analyze.html", username = username, **args)
+
 class ExploreHandler(BaseHandler):
     @tornado.web.authenticated
     def get(self):
@@ -154,6 +169,7 @@ class Application(tornado.web.Application):
             (r"/auth/logout/", AuthLogoutHandler),
             (r"/sysdiag/", SysDiagHandler),
             (r"/explore/", ExploreHandler),
+            (r"/analyze/", AnalyzeHandler),
         ]
         s = {
             "template_path":settings.TEMPLATE_PATH,
