@@ -57,7 +57,17 @@ class Pluricent():
 
     def subject_id(self, study_name, identifier):
         from models import Subject
-        return self.session.query(Subject.id).filter(Subject.identifier==identifier).one()[0]
+        try:
+           return self.session.query(Subject.id).filter(Subject.identifier==identifier).filter(models.Subject.study_id==self.study_id(study_name)).one()[0]
+        except base.NoResultFound:
+           raise base.NoResultFound('%s not found in %s'%(identifier, study_name))
+
+    def subject_from_id(self, id):
+        from models import Subject
+        try:
+           return self.session.query(Subject.identifier).filter(Subject.id==id).one()[0]
+        except base.NoResultFound:
+           raise base.NoResultFound('%s not found'%id)
 
     def studies(self):
         return [each.name for each in self.session.query(models.Study).all()]
