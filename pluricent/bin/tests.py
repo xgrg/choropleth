@@ -169,6 +169,19 @@ def test_create_subjects():
     print 'subjects', subjects
     return True
 
+def test_populate():
+    ''' Populates a dummy database from dummy dataset '''
+
+    import os.path as osp
+    dummydir = osp.join(osp.split(osp.dirname(__file__))[0], 'data', 'dummyds')
+    dummydb = osp.join(dummydir, 'pluricent.db')
+    assert(osp.isdir(dummydir))
+    assert(osp.isfile(dummydb))
+    print 'Reading %s'%dummydb
+
+    p = pl.Pluricent(dummydb)
+    p.populate_from_directory(dummydir, answer_yes=True)
+    return True
 
 #================================
 # Database-based tests (on prod)
@@ -277,7 +290,8 @@ def test_actions():
 
 def test_each_entry_has_action():
     ''' Checks every entry in tables Subject, T1Image, Study
-    has an associated action in Action'''
+    has an associated action in Action.
+    The opposite way is not verified.'''
     import pluricent as pl
     import json
     p = pl.Pluricent(pl.global_settings()['database'])
@@ -295,7 +309,8 @@ def test_each_entry_has_action():
     for s in studies:
         found = 0
         for each in sorted_actions['add_study']:
-            if s in each:
+            action_type, params = each
+            if s == params['name']:
                 found += 1
         if found != 1:
             each_has_action = False
@@ -303,7 +318,8 @@ def test_each_entry_has_action():
         for subject in p.subjects(s):
             found = 0
             for each in sorted_actions['add_subject']:
-                if s in each and subject in each:
+                action_type, params = each
+                if s == params['study'] and subject in params['subjects']:
                     found += 1
             if found != 1:
                 each_has_action = False
@@ -311,13 +327,51 @@ def test_each_entry_has_action():
             for image in p.t1images(s, subject):
                 found = 0
                 for each in sorted_actions['add_image']:
-                    if s in each and subject in each and image.path in each:
+                    action_type, params = each
+                    if s == params['study'] and subject == params['subject'] and image.path == params['path']:
                         found += 1
                 if found != 1:
                     each_has_action = False
                     print image, 'from', subject, 'in', s, 'found %s times'%found
+    #TODO Verify every Action has associated entry in appropriate tables
 
     return each_has_action
+
+def test_units():
+    ''' Checks that same variables have same units'''
+    p = pl.Pluricent(pl.global_settings()['database'])
+    are_units_valid = True
+    units = {}
+    for m in p.measurements():
+        if m.measurement in units.keys():
+            if m.unit != units[m.measurement]:
+                are_units_valid = False
+                print '%s has unit %s and %s'%(m.measurement, m.unit, units[m.measurement])
+                break
+        else:
+            units[m.measurement] = m.unit
+
+    return are_units_valid
+
+def test_measurements_format():
+    ''' Checks headers in measurements files '''
+    have_good_format = True
+    import os.path as osp
+
+    from pluricent import checkbase as cb
+    cl = cb.CloudyCheckbase(osp.dirname(pl.global_settings()['database']))
+    f = cl.get_files_of_type('measurements')
+    print f
+
+    from pluricent import tests
+    for each in f:
+        has_good_format = tests.test_measurements_format(each)
+        if not has_good_format:
+            print each, 'has a wrong format'
+            have_good_format = False
+            break
+    return have_good_format
+
 
 # ===================================================
 # End of tests

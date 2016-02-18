@@ -33,3 +33,18 @@ def test_respect_hierarchy(destdir):
           nb_excep += 1
     print 'exceptions :', nb_excep
     return len(unknown) == 0
+
+
+def test_measurements_format(csvfile):
+    import csv
+
+    has_good_format = True
+    header = ['image_id', 'structure', 'side', 'measurement', 'unit', 'value', 'software', 'comments']
+    with open(csvfile, 'rb') as f:
+       csvreader = csv.reader(f, delimiter=',', quotechar='|')
+       for i, row in enumerate(csvreader):
+          if i==0:
+             if row!=header:
+                print '%s differs from model %s'%(row, header)
+                return False
+    return has_good_format
