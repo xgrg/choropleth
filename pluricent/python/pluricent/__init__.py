@@ -90,6 +90,9 @@ class Pluricent():
     def t1image_from_path(self, path):
         return self.session.query(models.T1Image).filter(models.T1Image.path==path).one()[0]
 
+    def measurements(self):
+        return self.session.query(models.Measurement).all()
+
     def actions(self):
         return self.session.query(models.Action).all()
 
@@ -129,6 +132,22 @@ class Pluricent():
 
         new_t1image = T1Image(subject_id=subj_id, path=path)
         self.session.add(new_t1image)
+        self.session.commit()
+
+    def add_measurement(self, image_id, structure, measurement, unit, value, side=None, software=None, comments=None):
+        args = {'image_id':image_id,
+                'structure':structure,
+                'measurement':measurement,
+                'unit':unit,
+                'value':value}
+        if side:
+           args['side'] = side
+        if software:
+           args['software'] = software
+        if comments:
+           args['comments'] = comments
+        new_measurement = models.Measurement(**args)
+        self.session.add(new_measurement)
         self.session.commit()
 
     def add_action(self, action):
