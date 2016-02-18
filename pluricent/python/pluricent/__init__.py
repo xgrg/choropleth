@@ -13,10 +13,6 @@ class Pluricent():
             models.create_database(filepath)
         self.filepath = osp.abspath(filepath)
         self.session = models.create_session(filepath)
-        self.settings = global_settings()
-        if self.settings['database'] != self.filepath:
-           print 'Warning : differences in .pluricent_settings.json (%s) and given filepath (%s)'\
-                 %(self.settings['database'], self.filepath)
 
     def datasource(self):
         import os.path as osp
