@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+       <script type="text/javascript" src="{{static_url("js/jquery-2.2.0.min.js")}}"></script>
+       <meta charset="utf-8">
+       <meta http-equiv="X-UA-Compatible" content="IE=edge">
+       <meta name="viewport" content="width=device-width, initial-scale=1">
+       <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+       <meta name="description" content="">
+       <meta name="author" content="">
+       <link rel="icon" type="image/png" href="{{static_url("images/favicon.png")}}">
+
+       <title>Pluricent</title>
+
+       <!-- Bootstrap core CSS -->
+       <link href="{{static_url("vendor/bootstrap-3.3.6/dist/css/bootstrap.min.css")}}" rel="stylesheet">
+
+       <!-- Custom styles for this template -->
+       <link href="{{static_url("css/jumbotron.css")}}" rel="stylesheet">
+
+    </head>
+    <body>
+       <img id="loading-image" src="{{ static_url("images/loader.gif") }}" style="position:absolute; left:50%; top:50%; display:none;">
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+            <span class="sr-only">Toggle navigation</span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="/">Pluricent</a>
+        </div>
+        <div id="navbar" class="navbar-collapse collapse">
+          <ul class="nav navbar-nav navbar-right">
+            <li>
+            <a id="logout" class="btn btn-primary" href="auth/logout/">Log out</a>
+            </li>
+          </ul>
+        </div><!--/.navbar-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="starter-template">
+         <div style="float:left" class="dropdown">
+           <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
+             Select a structure
+             <span class="caret"></span>
+           </button>
+           <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
+            {% for item in structures %}
+             <li class="structure"><a href="#">{{ item }}</a></li>
+            {% end %}
+             <li role="separator" class="divider"></li>
+             <li><a href="#">Separated link</a></li>
+           </ul>
+         </div>
+         <div style="float:left"  class="btn"><span class="structure_name">Structure name</span></div>
+         <div id="canvas-wrapper">
+         <canvas id="myChart" width="600" height="200"></canvas>
+         </div>
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+          <span class="structure_name">Structure name</span>
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+         <table id='data' class="table table-bordered table-hover table-striped table-condensed">
+      </table>
+      </div>
+    </div>
+  </div>
+
+      </div> <!-- /container -->
+      <hr>
+
+      <footer>
+        <p>&copy; 2016 Pluricent, Inc.</p>
+      </footer>
+    </div> <!-- /container -->
+
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="{{static_url("vendor/Chart.min.js")}}"></script>
+    <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
+    <script>
+           Chart.defaults.global.responsive = true;
+           $("li").click(function(e){
+               if ($(this).attr("class") == 'structure'){
+                  $("#loading-image").show();
+                  $.ajax({
+                    type: "POST",
+                    url: '',
+                    data: 'id='+$(this).first("a").text(),
+                    success: function(data){
+                       args = JSON.parse(data);
+                       $(".structure_name").text(args['structure']);
+                       $("#canvas-wrapper").html("").html('<canvas id="myChart" width="600" height="200"></canvas>');
+                       var ctx = document.getElementById("myChart").getContext("2d");
+                       var data = {
+                         labels: JSON.parse(args['labels']),
+                         datasets: [
+                             {
+                                 label: "dataset",
+                                 fillColor: "rgba(220,220,220,0.5)",
+                                 strokeColor: "rgba(220,220,220,0.8)",
+                                 highlightFill: "rgba(220,220,220,0.75)",
+                                 highlightStroke: "rgba(220,220,220,1)",
+                                 data: JSON.parse(args['data'])
+                             }]
+                       };
+                       var myBarChart = new Chart(ctx).Bar(data, {});
+
+                       // update data
+                       $("#data").html(function(){
+                           html = '<tr><th>subject</th><th>'+ args['structure'] +'</th></tr>';
+                           for (i in args['measurements']){
+                              html = html + '<tr><td>'+i+'</td><td>'+args['measurements'][i]+'</td></tr>';
+                           }
+                           return html;
+                       });
+
+                     },
+                    complete: function(){
+                       $("#loading-image").hide();
+                    },
+                    dataType: "text"
+                  });
+               }
+           });
+           $("li.structure").first().click();
+    </script>
+  </body>
+</html>
+

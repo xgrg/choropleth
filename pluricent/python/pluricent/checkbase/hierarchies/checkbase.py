@@ -2,9 +2,9 @@
 
 class Checkbase():
     def __init__(self, directory):
-        import os
+        import os, os.path as osp
         assert (os.path.isdir(directory))
-        self.directory = directory
+        self.directory = osp.abspath(directory)
 
     def get_centres(self, save = True):
         import morphologist as morpho

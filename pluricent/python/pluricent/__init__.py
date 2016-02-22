@@ -10,7 +10,7 @@ class Pluricent():
         if not osp.isfile(filepath) and not create_database:
             raise Exception('%s must be an existing file'%filepath)
         if create_database:
-            models.create_database(filepath)
+            models.create_database(filepath, from_existing_repository=True)
         self.filepath = osp.abspath(filepath)
         self.session = models.create_session(filepath)
 
@@ -57,7 +57,17 @@ class Pluricent():
 
     def subject_id(self, study_name, identifier):
         from models import Subject
-        return self.session.query(Subject.id).filter(Subject.identifier==identifier).one()[0]
+        try:
+           return self.session.query(Subject.id).filter(Subject.identifier==identifier).filter(models.Subject.study_id==self.study_id(study_name)).one()[0]
+        except base.NoResultFound:
+           raise base.NoResultFound('%s not found in %s'%(identifier, study_name))
+
+    def subject_from_id(self, id):
+        from models import Subject
+        try:
+           return self.session.query(Subject).filter(Subject.id==id).one()
+        except base.NoResultFound:
+           raise base.NoResultFound('%s not found'%id)
 
     def studies(self):
         return [each.name for each in self.session.query(models.Study).all()]
@@ -79,6 +89,21 @@ class Pluricent():
 
     def t1image_from_path(self, path):
         return self.session.query(models.T1Image).filter(models.T1Image.path==path).one()[0]
+
+    def t1image_from_id(self, id):
+        return self.session.query(models.T1Image).filter(models.T1Image.id==id).one()
+
+    def measurements(self, study=None, structure=None):
+        if study and not study in self.studies():
+           raise base.NoResultFound('%s not found in %s'%(study, self.studies()))
+        if structure and not structure in [e.structure for e in self.measurements()]:
+           raise base.NoResultFound('%s not found in existing measurements'%structure)
+        a = self.session.query(models.Measurement)
+        if study:
+            a = a.join(models.T1Image).join(models.Subject).filter(models.Study.name == study)
+        if structure:
+            a = a.filter(models.Measurement.structure == structure)
+        return a.all()
 
     def actions(self):
         return self.session.query(models.Action).all()
@@ -121,6 +146,22 @@ class Pluricent():
         self.session.add(new_t1image)
         self.session.commit()
 
+    def add_measurement(self, image_id, structure, measurement, unit, value, side=None, software=None, comments=None):
+        args = {'image_id':image_id,
+                'structure':structure,
+                'measurement':measurement,
+                'unit':unit,
+                'value':value}
+        if side:
+           args['side'] = side
+        if software:
+           args['software'] = software
+        if comments:
+           args['comments'] = comments
+        new_measurement = models.Measurement(**args)
+        self.session.add(new_measurement)
+        self.session.commit()
+
     def add_action(self, action):
         from time import gmtime, strftime
         from models import Action
@@ -146,15 +187,20 @@ class Pluricent():
         for i, a in enumerate(actions):
             print 'action %s/%s'%(i, len(actions)), a
             self.add_action(a)
+            action_type, params = a
+            if action_type == 'add_study':
+                params['create_folder'] = False
+                self.add_study(**params)
 
-            if a[0] == 'add_study':
-                self.add_study(name=a[1], directory=a[2], description_file=a[3], create_folder=False)
+            elif action_type == 'add_subject':
+                params['create_folders'] = False
+                self.add_subjects(**params)
 
-            elif a[0] == 'add_subject':
-                self.add_subjects(subjects=[a[1]], study=a[2], create_folders=False)
+            elif action_type == 'add_image':
+                self.add_t1image(**params)
 
-            elif a[0] == 'add_image':
-                self.add_t1image(path=a[1], study=a[2], subject=a[3])
+            elif action_type == 'add_measurements':
+                self.insert_from_csv(params['csvfile'])
 
 
     def populate_from_directory(self, rootdir, answer_yes=False):
@@ -164,9 +210,11 @@ class Pluricent():
         import os.path as osp
         from pluricent import checkbase as cb
         from pluricent import tests
+        rootdir = osp.abspath(rootdir)
         dirlist = [e for e in os.listdir(rootdir) if osp.isdir(osp.join(rootdir, e)) and not e in ['.', '..']]
         filelist = [e for e in os.listdir(rootdir) if osp.isfile(osp.join(rootdir, e))]
-        assert(filelist == ['pluricent.db'])
+        if not filelist == ['pluricent.db']:
+           raise EXception('%s should contain only pluricent.db and study folder (contains %s)'%(rootdir, filelist))
         actions = []
 
 
@@ -183,11 +231,13 @@ class Pluricent():
               print fp, 'is missing'
            import json
            studyname = json.load(open(fp))['name']
-           actions.append(['add_study', studyname, studydir[len(rootdir)+1:], fp[len(osp.dirname(fp))+1:] ])
+           actions.append(['add_study', {'name': studyname,
+                                         'directory':studydir[len(rootdir)+1:],
+                                         'description_file':fp[len(osp.dirname(fp))+1:]} ])
            print 'study %s (%s)'%(studyname, studydir)
 
            for s in [e for e in os.listdir(studydir) if osp.isdir(osp.join(studydir, e))]:
-              actions.append(['add_subject', s, studyname])
+              actions.append(['add_subject', {'subjects':[s], 'study':studyname}])
 
            for root, dirs, files in os.walk(studydir):
                for f in files:
@@ -195,8 +245,10 @@ class Pluricent():
                    res = cb.parsefilepath(fp, cl.patterns)
                    if not res is None:
                        datatype, att = res
-                       if datatype in  'raw':
-                           actions.append(['add_image', fp[len(rootdir)+1:], studyname, att['subject']])
+                       if datatype == 'raw':
+                          actions.append(['add_image', {'path':fp[len(rootdir)+1:], 'study':studyname, 'subject':att['subject']}])
+                       elif datatype == 'measurements':
+                          actions.append(['add_measurements', {'csvfile':fp[len(rootdir)+1:]}])
 
         print actions
         print len(actions), 'actions to make'
@@ -208,6 +260,82 @@ class Pluricent():
                models.create_database(self.filepath, from_existing_repository=True)
 
             self.make_actions(actions)
+
+
+    def insert_from_csv(self, csvfile):
+       ''' import entries from a csvfile into the database
+       The csv file must have the good format
+       '''
+       import csv, tests
+
+       actions = []
+       assert(tests.test_measurements_format(csvfile))
+       header = ['image_id', 'structure', 'side', 'measurement', 'unit', 'value', 'software', 'comments']
+       with open(csvfile, 'rb') as f:
+          csvreader = csv.reader(f, delimiter=',', quotechar='|')
+          for i, row in enumerate(csvreader):
+             if i==0:
+                if row!=header:
+                   raise Exception('%s differs from model %s'%(row, header))
+                continue
+
+             params = {}
+             params['image_id'] = int(row[0])
+             params['structure'] = str(row[1])
+             if row[2] != 'n/a':
+                assert(row[2] in ['left', 'right'])
+                params['side'] = row[2]
+             params['measurement'] = str(row[3])
+             params['unit'] = str(row[4])
+             params['value'] = float(row[5])
+             if row[6] != 'n/a':
+                params['software'] = str(row[6])
+             if row[7] != 'n/a':
+                params['comments'] = str(row[7])
+
+             actions.append(params)
+
+       #print actions
+       print len(actions), 'measurements to insert'
+       for params in actions:
+           # removing 'n/a' parameters
+           params2 = dict([(k,v) for k,v in params.items() if v != 'n/a'])
+           self.add_measurement(**params2)
+
+    def convert_csvfile(self, csvfile, study, output):
+       ''' Takes a csv with the first column for subjects, and converts it with a first column
+       for image_ids
+       Works only when there is only one image possible per subject'''
+       import csv
+       header = ['subject', 'structure', 'side', 'measurement', 'unit', 'value', 'software', 'comments']
+       w = open(output, 'w')
+       w.write('%s\n'%','.join(['image_id', 'structure', 'side', 'measurement', 'unit', 'value', 'software', 'comments']))
+       images0 = self.t1images(study=study)
+       images = {}
+       for i in images0:
+          images.setdefault(i.subject_id, []).append(i.id)
+       images = dict([(self.subject_from_id(k).identifier, v) for k,v in images.items()])
+
+       with open(csvfile, 'rb') as f:
+          csvreader = csv.reader(f, delimiter=',', quotechar='|')
+          for i, row in enumerate(csvreader):
+             if i==0:
+                if row!=header:
+                   raise Exception('%s differs from model %s'%(row, header))
+                continue
+             subject = str(row[0])
+             if not subject in images:
+                print 'skipping', subject
+                continue
+             elif len(images[subject]) != 1:
+                w.close()
+                raise Exception('%s images found for subject %s in %s'%(len(images[subject]), subject, study))
+             line = [str(int(images[subject][0]))]
+             line.extend(row[1:])
+             w.write('%s\n'%','.join(line))
+
+       w.close()
+
 
 
 def global_settings():

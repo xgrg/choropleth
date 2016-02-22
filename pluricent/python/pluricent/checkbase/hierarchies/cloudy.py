@@ -14,6 +14,8 @@ patterns = { 'raw': os.path.join('(?P<database>[\w -/]+)', '(?P<subject>\w+)', '
              'left_hemi': os.path.join('(?P<database>[\w -/]+)', '(?P<subject>\w+)', 'analysis', '(?P=subject)_(?P<side>[L]?)hemi.(?P<extension>%s)'%mesh_extensions),
              'right_hemi': os.path.join('(?P<database>[\w -/]+)', '(?P<subject>\w+)', 'analysis', '(?P=subject)_(?P<side>[R]?)hemi.(?P<extension>%s)'%mesh_extensions),
              'dataset_description': os.path.join('(?P<database>[\w -/]+)', 'dataset_description.json'),
+             'readme': os.path.join('(?P<database>[\w -/]+)', 'README'),
+             'measurements': os.path.join('(?P<database>[\w -/]+)', 'measurements_(?P<filename>\w+).csv'),
              #'subject' : os.path.join('(?P<database>[\w -/]+)', '(?P<subject>\w+)')
 #             'snapshot_splitbrain': os.path.join('(?P<database>[\w -/]+)', 'ANALYSIS', '(?P<group>[\w -]+)', '(?P<subject>\w+)', '(?P<timepoint>\w+)', 'MRI', 'snapshot_splitbrain_(?P=subject).png$'),
 #             'spm8_nobias': os.path.join('(?P<database>[\w -/]+)', 'ANALYSIS', '(?P<group>[\w -]+)', '(?P<subject>\w+)', '(?P<timepoint>\w+)', 'MRI', 'spm8_nobias_(?P=subject).nii.gz$'),

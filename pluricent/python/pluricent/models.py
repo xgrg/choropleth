@@ -63,10 +63,18 @@ class T1Image(Base):
   comments = Column(String(100))
   path = Column(String(100), nullable=False, unique=True)
 
-class Measurements(Base):
-  __tablename__ = 'measurements'
+class Measurement(Base):
+  __tablename__ = 'measurement'
   id = Column(Integer, primary_key=True)
-  subject_id = Column(Integer, ForeignKey('subject.id'), nullable=False)
+  image_id = Column(Integer, ForeignKey('t1image.id'), nullable=False)
+  structure = Column(String(25), nullable=False)
+  side = Column(String(25), doc='Hemisphere')
+  measurement = Column(String(25), nullable=False)
+  unit = Column(String(10), nullable=False)
+  value = Column(Float, nullable=False)
+  software = Column(String(25))
+  comments = Column(String(100))
+  image = relationship(T1Image)
 
 
 def create_engine(fn = 'pluricent.db'):
@@ -169,6 +177,20 @@ def create_database(fn = 'pluricent.db', from_existing_repository = False):
         scanner = relationship(Scanner)
         comments = Column(String(100))
         path = Column(String(100), nullable=False, unique=True)
+
+    class Measurement(Base):
+        __tablename__ = 'measurement'
+        id = Column(Integer, primary_key=True)
+        image_id = Column(Integer, ForeignKey('t1image.id'), nullable=False)
+        structure = Column(String(25), nullable=False)
+        side = Column(String(25), doc='Hemisphere')
+        measurement = Column(String(25), nullable=False)
+        unit = Column(String(10), nullable=False)
+        value = Column(Float, nullable=False)
+        software = Column(String(25))
+        comments = Column(String(100))
+        image = relationship(T1Image)
+
 
     Base.metadata.create_all()
     print '  2', Base.metadata.tables
