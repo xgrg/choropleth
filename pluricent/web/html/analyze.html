@@ -106,8 +106,6 @@
                     success: function(data){
                        args = JSON.parse(data);
                        $(".structure_name").text(args['structure']);
-                       console.log(JSON.parse(args['data']));
-                       console.log(JSON.parse(args['labels']));
                        $("#canvas-wrapper").html("").html('<canvas id="myChart" width="600" height="200"></canvas>');
                        var ctx = document.getElementById("myChart").getContext("2d");
                        var data = {
