@@ -65,7 +65,7 @@ class Pluricent():
     def subject_from_id(self, id):
         from models import Subject
         try:
-           return self.session.query(Subject.identifier).filter(Subject.id==id).one()[0]
+           return self.session.query(Subject).filter(Subject.id==id).one()
         except base.NoResultFound:
            raise base.NoResultFound('%s not found'%id)
 
@@ -89,6 +89,9 @@ class Pluricent():
 
     def t1image_from_path(self, path):
         return self.session.query(models.T1Image).filter(models.T1Image.path==path).one()[0]
+
+    def t1image_from_id(self, id):
+        return self.session.query(models.T1Image).filter(models.T1Image.id==id).one()
 
     def measurements(self, study=None, structure=None):
         if study and not study in self.studies():
@@ -311,7 +314,7 @@ class Pluricent():
        images = {}
        for i in images0:
           images.setdefault(i.subject_id, []).append(i.id)
-       images = dict([(self.subject_from_id(k), v) for k,v in images.items()])
+       images = dict([(self.subject_from_id(k).identifier, v) for k,v in images.items()])
 
        with open(csvfile, 'rb') as f:
           csvreader = csv.reader(f, delimiter=',', quotechar='|')

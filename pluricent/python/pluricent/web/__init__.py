@@ -40,26 +40,25 @@ class AnalyzeHandler(BaseHandler):
         print structure
         args = {}
         p = pl.Pluricent(pl.global_settings()['database'])
-        measurements = [e.value for e in p.measurements(structure=structure)]
-        args['data'], args['labels'] = np.histogram(measurements)
+
+        structures = [e.structure for e in p.measurements()]
+        measurements = dict([(p.subject_from_id(p.t1image_from_id(e.image_id).subject_id).identifier, e.value) for e in p.measurements(structure=structure)])
+        args['data'], args['labels'] = np.histogram(measurements.values())
         args = dict([(k, json.dumps([int(e) for e in v.tolist()])) for k,v in args.items()])
         args['structure'] = structure
+        args['structures'] = structures
+        args['measurements'] = measurements
         res = json.dumps(args)
-        print res
         self.write(res)
         return None
 
     def get(self):
         username = self.current_user[1:-1]
         import pluricent as pl
-        import numpy as np
-        import json
         args = {}
         p = pl.Pluricent(pl.global_settings()['database'])
-        measurements = [e.value for e in p.measurements(structure='Left-Caudate')]
-        args['data'], args['labels'] = np.histogram(measurements)
-        args = dict([(k, json.dumps([int(e) for e in v.tolist()])) for k,v in args.items()])
-
+        structures = [e.structure for e in p.measurements()]
+        args['structures'] = structures
         self.render("html/analyze.html", username = username, **args)
 
 class ExploreHandler(BaseHandler):

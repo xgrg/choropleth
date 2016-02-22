@@ -45,22 +45,39 @@
 
     <div class="container">
       <div class="starter-template">
-         <div class="dropdown">
+         <div style="float:left" class="dropdown">
            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-haspopup="true" aria-expanded="true">
-             Dropdown
+             Select a structure
              <span class="caret"></span>
            </button>
            <ul class="dropdown-menu" aria-labelledby="dropdownMenu1">
-             <li class="structure"><a href="#">Left-Caudate</a></li>
-             <li class="structure"><a href="#">Right-Caudate</a></li>
+            {% for item in structures %}
+             <li class="structure"><a href="#">{{ item }}</a></li>
+            {% end %}
              <li role="separator" class="divider"></li>
              <li><a href="#">Separated link</a></li>
            </ul>
          </div>
-         <p><span id="structure_name">Left-Caudate</span> volumes</p>
+         <div style="float:left"  class="btn"><span class="structure_name">Structure name</span></div>
          <div id="canvas-wrapper">
          <canvas id="myChart" width="600" height="200"></canvas>
          </div>
+<div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+  <div class="panel panel-default">
+    <div class="panel-heading" role="tab" id="headingOne">
+      <h4 class="panel-title">
+        <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+          <span class="structure_name">Structure name</span>
+        </a>
+      </h4>
+    </div>
+    <div id="collapseOne" class="panel-collapse collapse in" role="tabpanel" aria-labelledby="headingOne">
+      <div class="panel-body">
+         <table id='data' class="table table-bordered table-hover table-striped table-condensed">
+      </table>
+      </div>
+    </div>
+  </div>
 
       </div> <!-- /container -->
       <hr>
@@ -79,20 +96,6 @@
     <script src="{{static_url("vendor/bootstrap-3.3.6/dist/js/bootstrap.min.js")}}"></script>
     <script>
            Chart.defaults.global.responsive = true;
-           var ctx = document.getElementById("myChart").getContext("2d");
-           var data = {
-             labels: JSON.parse("{{labels}}"), //["January", "February", "March", "April", "May", "June", "July"],
-             datasets: [
-                 {
-                     label: "My First dataset",
-                     fillColor: "rgba(220,220,220,0.5)",
-                     strokeColor: "rgba(220,220,220,0.8)",
-                     highlightFill: "rgba(220,220,220,0.75)",
-                     highlightStroke: "rgba(220,220,220,1)",
-                     data: JSON.parse("{{data}}") //[65, 59, 80, 81, 56, 55, 40]
-                 }]
-           };
-           var myBarChart = new Chart(ctx).Bar(data, {});
            $("li").click(function(e){
                if ($(this).attr("class") == 'structure'){
                   $("#loading-image").show();
@@ -102,25 +105,33 @@
                     data: 'id='+$(this).first("a").text(),
                     success: function(data){
                        args = JSON.parse(data);
-                       $("#structure_name").text(args['structure']);
+                       $(".structure_name").text(args['structure']);
                        console.log(JSON.parse(args['data']));
                        console.log(JSON.parse(args['labels']));
                        $("#canvas-wrapper").html("").html('<canvas id="myChart" width="600" height="200"></canvas>');
                        var ctx = document.getElementById("myChart").getContext("2d");
                        var data = {
-                         labels: JSON.parse(args['labels']), //["January", "February", "March", "April", "May", "June", "July"],
+                         labels: JSON.parse(args['labels']),
                          datasets: [
                              {
-                                 label: "My First dataset",
+                                 label: "dataset",
                                  fillColor: "rgba(220,220,220,0.5)",
                                  strokeColor: "rgba(220,220,220,0.8)",
                                  highlightFill: "rgba(220,220,220,0.75)",
                                  highlightStroke: "rgba(220,220,220,1)",
-                                 data: JSON.parse(args['data']) //[65, 59, 80, 81, 56, 55, 40]
+                                 data: JSON.parse(args['data'])
                              }]
                        };
-                       //myBarChart.update();
                        var myBarChart = new Chart(ctx).Bar(data, {});
+
+                       // update data
+                       $("#data").html(function(){
+                           html = '<tr><th>subject</th><th>'+ args['structure'] +'</th></tr>';
+                           for (i in args['measurements']){
+                              html = html + '<tr><td>'+i+'</td><td>'+args['measurements'][i]+'</td></tr>';
+                           }
+                           return html;
+                       });
 
                      },
                     complete: function(){
@@ -130,6 +141,7 @@
                   });
                }
            });
+           $("li.structure").first().click();
     </script>
   </body>
 </html>
