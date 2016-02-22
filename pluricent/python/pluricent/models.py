@@ -76,6 +76,14 @@ class Measurement(Base):
   comments = Column(String(100))
   image = relationship(T1Image)
 
+class Processing(Base):
+  __tablename__ = 'processing'
+  id = Column(Integer, primary_key=True)
+  input_id = Column(Integer, ForeignKey('T1Image.id'), nullable=False)
+  software = Column(String(25), nullable=False)
+  comments = Column(String(100))
+  path = Column(String(100), nullable=False, unique=True)
+  input = relationship(T1Image)
 
 def create_engine(fn = 'pluricent.db'):
    #FIXME check that fn is a filename and it exists
@@ -177,6 +185,15 @@ def create_database(fn = 'pluricent.db', from_existing_repository = False):
         scanner = relationship(Scanner)
         comments = Column(String(100))
         path = Column(String(100), nullable=False, unique=True)
+
+    class Processing(Base):
+        __tablename__ = 'processing'
+        id = Column(Integer, primary_key=True)
+        input_id = Column(Integer, ForeignKey('T1Image.id'), nullable=False)
+        software = Column(String(25), nullable=False)
+        comments = Column(String(100))
+        path = Column(String(100), nullable=False, unique=True)
+        input = relationship(T1Image)
 
     class Measurement(Base):
         __tablename__ = 'measurement'
