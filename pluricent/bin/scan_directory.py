@@ -50,8 +50,6 @@ def scandir_BVdatabase(studydir):
 
     subjects = m.get_flat_subjects()
 
-    actions.extend([('add_subject', s) for s in subjects])
-
     for subject in subjects:
       files = m.get_subject_hierarchy_files(subject)
 
@@ -59,9 +57,13 @@ def scandir_BVdatabase(studydir):
         for each in v:
            fp = cb.getfilepath(k, each)
            if osp.isfile(fp):
-              if k in ['raw', 'nobias'] :
+              if k not in ['acpc', 'spm_tiv_logfile'] :
+                 if k == 'nobias' and 'analysis' == 'spm8_new_segment':
+                    k = 'spm_nobias'
                  print fp, 'identified as', k
+
                  actions.append(('add_image', subject, k, fp, each))
+
     return actions
 
 
@@ -80,24 +82,39 @@ def move_mapt_to_cloud_hierarchy(actions, destdir):
     from pluricent import checkbase as cb
     csv = ['']
     cl = cb.CloudyCheckbase(destdir)
-
-    assert(osp.exists(destdir))
+    destdir = osp.abspath(destdir)
 
     for a in actions:
         k, v = a[0], a[1:]
         if k=='add_image' and v[1] == 'raw':
+            print v
             subject, datatype, fp, att = v
-            d = osp.join(destdir, subject, 'anatomy')
-            att.update({'database': destdir, 'number': '*'})
-            fp_joker = cb.getfilepath(datatype, att, patterns=cl.patterns)
-            from glob import glob
-            number = len(glob(fp_joker)) + 1
-            att.update({'database': destdir, 'number': '%03d'%number})
+            #d = osp.join(destdir, subject, 'anatomy')
+            att.update({'database': destdir, 'session': '*'})
+            #fp_joker = cb.getfilepath(datatype, att, patterns=cl.patterns)
+            #from glob import glob
+            number = 1 #len(glob(fp_joker)) + 1
+            att.update({'database': destdir, 'session': '%03d'%number})
             d2 = cb.getfilepath(datatype, att, patterns=cl.patterns)
 
-            if not osp.exists(d): os.makedirs(d)
-            os.system('cp %s %s'%(fp, d2))
-            print 'cp %s %s'%(fp, d2)
+        elif k=='add_image' and v[1] != 'raw':
+            print v
+            subject, datatype, fp, att = v
+            if datatype == 'nobias' and att['analysis'] == 'spm8_new_segment':
+               datatype = 'spm_nobias'
+            #d = osp.join(destdir, subject, 'analysis')
+            att.update({'database': destdir, 'session': '*'})
+            #fp_joker = cb.getfilepath(datatype, att, patterns=cl.patterns)
+            #from glob import glob
+            number = 1 #len(glob(fp_joker)) + 1
+            att.update({'database': destdir, 'session': '%03d'%number})
+            d2 = cb.getfilepath(datatype, att, patterns=cl.patterns)
+
+        if not osp.exists(osp.dirname(d2)): os.makedirs(osp.dirname(d2))
+        print 'cp %s %s'%(fp, d2)
+        assert(not osp.isfile(d2))
+        os.system('cp %s %s'%(fp, d2))
+
 
 
 def check_pushzone(pzdir, destdir):
