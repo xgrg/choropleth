@@ -63,6 +63,33 @@ class AnalyzeHandler(BaseHandler):
 
 class ExploreHandler(BaseHandler):
     @tornado.web.authenticated
+    def post(self):
+        import pluricent as pl
+        import numpy as np
+        import json
+        args = {}
+        p = pl.Pluricent(pl.global_settings()['database'])
+
+        t1images = []
+        for s in p.studies():
+           subjects = p.subjects(s)
+           t1im = p.t1images(s)
+           d = {}
+           for i in t1im:
+              d.setdefault(i.subject.identifier, []).append(i)
+           print d
+           for subject in subjects:
+              t1images.append((subject, len(d.get(subject, []))))
+
+
+        print t1images
+        args['images'] = t1images
+
+        res = json.dumps(args)
+        self.write(res)
+
+        return None
+
     def get(self):
         username = self.current_user[1:-1]
         import pluricent as pl

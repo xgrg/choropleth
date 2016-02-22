@@ -20,6 +20,7 @@
 
     </head>
     <body>
+       <img id="loading-image" src="{{ static_url("images/loader.gif") }}" style="position:absolute; left:50%; top:50%; display:none;">
 
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
@@ -47,6 +48,11 @@
       <div id="studies">
       </div>
 
+      <div>
+         <table id="dashboard" class="table table-condensed table-bordered table-hover">
+         </table>
+      </div>
+
       </div> <!-- /container -->
       <hr>
 
@@ -64,9 +70,7 @@
     <script>
     $('#studies').html(function(){
       html = '';
-      console.log('{{studies}}');
       studies = JSON.parse('{{studies}}');
-      console.log(studies);
       if (studies.length == 0) {
           return 'no study';
       }
@@ -83,6 +87,42 @@
           html = '<div id="warning" class="alert alert-warning" role="warning">'+warning+'</div>' + html;
        }
        return html;
+    });
+    function colorcode(i){
+       if (i==0){
+          return 'danger';
+       }
+       else if (i==1){
+          return 'success';
+         }
+       else {
+          return 'warning';
+       }
+    };
+    $('#dashboard').html(function(){
+                  $("#loading-image").show();
+                  $.ajax({
+                    type: "POST",
+                    url: '',
+                    data: '',
+                    success: function(data){
+                       args = JSON.parse(data);
+                       // update data
+                       $("#dashboard").html(function(){
+                           html = '<tr><th>subject</th><th>t1 image</th></tr>';
+                           for (i in args['images']){
+                              html = html + '<tr><td>'+args['images'][i][0]+'</td><td class="'+ colorcode(args['images'][i][1])+'">&nbsp;</td></tr>';
+                           }
+                           return html;
+                       });
+
+                     },
+                    complete: function(){
+                       $("#loading-image").hide();
+                    },
+                    dataType: "text"
+                  });
+
     });
     </script>
   </body>
