@@ -41,6 +41,7 @@ def scandir_BVdatabase(studydir):
     import os
 
     actions = []
+    studydir = osp.abspath(studydir)
     assert(osp.isdir(studydir))
     studydir = studydir.rstrip('/')
     assert(osp.split(studydir)[-1] == 'BVdatabase')
@@ -58,7 +59,7 @@ def scandir_BVdatabase(studydir):
            fp = cb.getfilepath(k, each)
            if osp.isfile(fp):
               if k not in ['acpc', 'spm_tiv_logfile'] :
-                 if k == 'nobias' and 'analysis' == 'spm8_new_segment':
+                 if k == 'nobias' and each['analysis'] == 'spm8_new_segment':
                     k = 'spm_nobias'
                  print fp, 'identified as', k
 
