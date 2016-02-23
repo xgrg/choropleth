@@ -79,7 +79,7 @@ class Measurement(Base):
 class Processing(Base):
   __tablename__ = 'processing'
   id = Column(Integer, primary_key=True)
-  input_id = Column(Integer, ForeignKey('T1Image.id'), nullable=False)
+  input_id = Column(Integer, ForeignKey('t1image.id'), nullable=False)
   software = Column(String(25), nullable=False)
   comments = Column(String(100))
   path = Column(String(100), nullable=False, unique=True)
@@ -189,7 +189,7 @@ def create_database(fn = 'pluricent.db', from_existing_repository = False):
     class Processing(Base):
         __tablename__ = 'processing'
         id = Column(Integer, primary_key=True)
-        input_id = Column(Integer, ForeignKey('T1Image.id'), nullable=False)
+        input_id = Column(Integer, ForeignKey('t1image.id'), nullable=False)
         software = Column(String(25), nullable=False)
         comments = Column(String(100))
         path = Column(String(100), nullable=False, unique=True)
