@@ -60,9 +60,7 @@ class AnalyzeHandler(BaseHandler):
         from sqlalchemy import distinct
         args = {}
         p = pl.Pluricent(pl.global_settings()['database'])
-        #structures = p.session.query(distinct(pl.models.Measurement.structure)).all()
         structures = [str(e[0]) for e in p.session.query(distinct(pl.models.Measurement.structure)).all()]
-        #structures = list(set([e.structure for e in p.measurements()]))
         args['structures'] = structures
         self.render("html/analyze.html", username = username, **args)
 
@@ -70,6 +68,7 @@ class ExploreHandler(BaseHandler):
     @tornado.web.authenticated
     def post(self):
         import pluricent as pl
+        from sqlalchemy import func, distinct
         import numpy as np
         import json
         args = {}
@@ -82,12 +81,20 @@ class ExploreHandler(BaseHandler):
            d = {}
            for i in t1im:
               d.setdefault(i.subject.identifier, []).append(i)
-           print d
-           for subject in subjects:
-              t1images.append((subject, len(d.get(subject, []))))
+           res = p.session.query(pl.models.Subject.identifier, func.count(pl.models.Subject.identifier)).join(pl.models.T1Image).filter(pl.models.T1Image.subject_id == pl.models.Subject.id).all()
+           print res
+           t1images.extend(res)
+
+        # list of processing datatypes
+        datatypes = p.session.query(distinct(pl.models.Processing.datatype)).all()
+        print datatypes
+        # for each datatype, recup le dict par sujet
+        datatypes = p.session.query(distinct(pl.models.Processing.datatype)).all()
 
 
-        print t1images
+
+
+        #print t1images
         args['images'] = t1images
 
         res = json.dumps(args)

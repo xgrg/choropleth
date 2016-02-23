@@ -88,7 +88,7 @@ class Pluricent():
 
 
     def t1image_from_path(self, path):
-        return self.session.query(models.T1Image).filter(models.T1Image.path==path).one()[0]
+        return self.session.query(models.T1Image).filter(models.T1Image.path==path).one()
 
     def t1image_from_id(self, id):
         return self.session.query(models.T1Image).filter(models.T1Image.id==id).one()
@@ -104,6 +104,19 @@ class Pluricent():
         if structure:
             a = a.filter(models.Measurement.structure == structure)
         return a.all()
+
+    def processing(self, **kw):
+        if 'study' in kw and not kw['study'] in self.studies():
+           raise base.NoResultFound('%s not found in %s'%(kw['study'], self.studies()))
+        a = self.session.query(models.Processing)
+        if 'datatype' in kw:
+            a = a.filter(models.Processing.datatype == kw['datatype'])
+        if 'study' in kw:
+            a = a.join(models.Subject).join(models.Study).filter(models.Study.name == kw['study'])
+        if 'subject' in kw:
+            a = a.join(models.Subject).filter(models.Subject.identifier == kw['subject'])
+        return a.all()
+
 
     def actions(self):
         return self.session.query(models.Action).all()
@@ -144,6 +157,20 @@ class Pluricent():
 
         new_t1image = T1Image(subject_id=subj_id, path=path)
         self.session.add(new_t1image)
+        self.session.commit()
+
+    def add_processing(self, path, software, datatype, inputfp):
+        from pluricent.models import Processing
+        try:
+           input_id = self.t1image_from_path(inputfp).id
+        except Exception as e:
+           raise Exception('Problem searching for %s'%inputfp)
+
+        new_processing = Processing(path=path,
+                                    software=software,
+                                    datatype=datatype,
+                                    input_id=input_id)
+        self.session.add(new_processing)
         self.session.commit()
 
     def add_measurement(self, image_id, structure, measurement, unit, value, side=None, software=None, comments=None):
@@ -199,8 +226,12 @@ class Pluricent():
             elif action_type == 'add_image':
                 self.add_t1image(**params)
 
+            elif action_type == 'add_processing':
+                self.add_processing(**params)
+
             elif action_type == 'add_measurements':
-                self.insert_from_csv(params['csvfile'])
+                self.convert_csvfile(params['csvfile'], params['study'], '/tmp/toto.csv')
+                self.insert_from_csv('/tmp/toto.csv')
 
 
     def populate_from_directory(self, rootdir, answer_yes=False):
@@ -247,8 +278,18 @@ class Pluricent():
                        datatype, att = res
                        if datatype == 'raw':
                           actions.append(['add_image', {'path':fp[len(rootdir)+1:], 'study':studyname, 'subject':att['subject']}])
+                       elif datatype in ['left_greywhite', 'right_greywhite', 'nobias', 'spm_nobias', 'split', 'brainmask', \
+                             'left_white', 'right_white', 'left_hemi', 'right_hemi', 'left_sulci', 'right_sulci', 'spm_nobias',\
+                             'spm_greymap', 'spm_whitemap', 'spm_csfmap', 'spm_greymap_warped', 'spm_whitemap_warped',\
+                             'spm_csfmap_warped', 'spm_greymap_modulated', 'spm_whitemap_modulated', 'spm_csfmap_modulated']:
+                          t1image = cb.getfilepath('raw', att, cl.patterns)
+                          software = 'spm8' if datatype.startswith('spm') else 'morphologist'
+                          actions.append(['add_processing', {'path':fp[len(rootdir)+1:],
+                                                             'inputfp': t1image[len(rootdir)+1:],
+                                                             'datatype':datatype,
+                                                             'software':software}])
                        elif datatype == 'measurements':
-                          actions.append(['add_measurements', {'csvfile':fp[len(rootdir)+1:]}])
+                          actions.append(['add_measurements', {'csvfile':fp[len(rootdir)+1:], 'study': studyname}])
 
         print actions
         print len(actions), 'actions to make'
