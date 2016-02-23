@@ -36,13 +36,15 @@ class AnalyzeHandler(BaseHandler):
         import pluricent as pl
         import numpy as np
         import json
+        from sqlalchemy import distinct
         structure = self.get_argument('id')
         print structure
         args = {}
         p = pl.Pluricent(pl.global_settings()['database'])
 
-        structures = [e.structure for e in p.measurements()]
-        measurements = dict([(p.subject_from_id(p.t1image_from_id(e.image_id).subject_id).identifier, e.value) for e in p.measurements(structure=structure)])
+        structures = [str(e[0]) for e in p.session.query(distinct(pl.models.Measurement.structure)).all()]
+        measurements = dict(p.session.query(pl.models.Subject.identifier, pl.models.Measurement.value)\
+                       .join(pl.models.T1Image).join(pl.models.Measurement).filter(pl.models.Measurement.structure == structure).all())
         args['data'], args['labels'] = np.histogram(measurements.values())
         args = dict([(k, json.dumps([int(e) for e in v.tolist()])) for k,v in args.items()])
         args['structure'] = structure
@@ -55,9 +57,12 @@ class AnalyzeHandler(BaseHandler):
     def get(self):
         username = self.current_user[1:-1]
         import pluricent as pl
+        from sqlalchemy import distinct
         args = {}
         p = pl.Pluricent(pl.global_settings()['database'])
-        structures = [e.structure for e in p.measurements()]
+        #structures = p.session.query(distinct(pl.models.Measurement.structure)).all()
+        structures = [str(e[0]) for e in p.session.query(distinct(pl.models.Measurement.structure)).all()]
+        #structures = list(set([e.structure for e in p.measurements()]))
         args['structures'] = structures
         self.render("html/analyze.html", username = username, **args)
 
