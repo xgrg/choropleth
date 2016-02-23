@@ -67,6 +67,55 @@ def scandir_BVdatabase(studydir):
 
     return actions
 
+def identification_ratio(a, studydir):
+    import os.path as osp
+    import os
+    allfiles = []
+    actions_files = [e[3] for e in a]
+
+    for root, dirs, files in os.walk(studydir):
+        allfiles.extend([osp.join(studydir,root, e) for e in files])
+
+    leftfiles = list(set(allfiles).difference(set(actions_files)))
+    left = {}
+    left['minf'] = [e for e in leftfiles if e.endswith('.minf')]
+    leftfiles = list(set(leftfiles).difference(set(left['minf'])))
+    left['snapshots'] = [e for e in leftfiles if 'snapshots' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['snapshots'])))
+    left['folds'] = [e for e in leftfiles if 'folds' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['folds'])))
+    left['trm'] = [e for e in leftfiles if 'trm' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['trm'])))
+    left['mat'] = [e for e in leftfiles if 'mat' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['mat'])))
+    left['Lgw'] = [e for e in leftfiles if 'Lgw' in e or 'Rgw' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['Lgw'])))
+    left['history'] = [e for e in leftfiles if 'history' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['history'])))
+    left['skullscalp'] = [e for e in leftfiles if 'skull' in e or 'scalp' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['skullscalp'])))
+    left['scalp'] = [e for e in leftfiles if 'scalp' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['scalp'])))
+    left['mni'] = [e for e in leftfiles if 'Mni' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['mni'])))
+    left['hfiltered']= [e for e in leftfiles if 'hfiltered' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['hfiltered'])))
+    left['normalized'] = [e for e in leftfiles if 'normalized' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['normalized'])))
+    left['histogram'] = [e for e in leftfiles if '.his' in e or '.han' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['histogram'])))
+    left['edges'] = [e for e in leftfiles if 'edges' in e or 'variance' in e or 'roots' in e or 'skeleton' in e or 'head' in e or 'whiteridge' in e or 'Lcortex' in e or 'Rcortex' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['edges'])))
+    left['referential'] = [e for e in leftfiles if '.referential' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['referential'])))
+    left['apc'] = [e for e in leftfiles if '.APC' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['apc'])))
+    left['matlab'] = [e for e in leftfiles if e.endswith('.m')]
+    leftfiles = list(set(leftfiles).difference(set(left['matlab'])))
+    left['sanlm'] = [e for e in leftfiles if 'sanlm' in e]
+    leftfiles = list(set(leftfiles).difference(set(left['sanlm'])))
+    return actions_files, allfiles, left, leftfiles
+
 
     # estimating directory size
     cumulative_size = 0
