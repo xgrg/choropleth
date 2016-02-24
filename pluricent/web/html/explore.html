@@ -109,9 +109,21 @@
                        args = JSON.parse(data);
                        // update data
                        $("#dashboard").html(function(){
-                           html = '<tr><th>subject</th><th>t1 image</th></tr>';
+                           html = '<tr>';
+                           for (i in args['images'][0]){
+                              html = html + '<th>'+ args['images'][0][i] + '</th>';
+                           }
+                           html = html + '</tr>';
                            for (i in args['images']){
-                              html = html + '<tr><td>'+args['images'][i][0]+'</td><td class="'+ colorcode(args['images'][i][1])+'">&nbsp;</td></tr>';
+                              if (i>0){
+                                 line = '<tr><td>' + args['images'][i][0] + '</td>';
+                                 for (j in args['images'][i]){
+                                    if (j>0){
+                                       line = line + '<td class="' +colorcode(args['images'][i][j]) + '">&nbsp;</td>';
+                                    }
+                                 }
+                                 html = html + line + '</tr>'; //'<tr><td>'+args['images'][i][0]+'</td><td class="'+ colorcode(args['images'][i][1])+'">&nbsp;</td></tr>';
+                              }
                            }
                            return html;
                        });

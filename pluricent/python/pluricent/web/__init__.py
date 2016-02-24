@@ -73,29 +73,25 @@ class ExploreHandler(BaseHandler):
         import json
         args = {}
         p = pl.Pluricent(pl.global_settings()['database'])
+        datatypes = [e[0] for e in p.session.query(distinct(pl.models.Processing.datatype)).all()]
 
-        t1images = []
-        for s in p.studies():
-           subjects = p.subjects(s)
-           t1im = p.t1images(s)
-           d = {}
-           for i in t1im:
-              d.setdefault(i.subject.identifier, []).append(i)
-           res = p.session.query(pl.models.Subject.identifier, func.count(pl.models.Subject.identifier)).join(pl.models.T1Image).filter(pl.models.T1Image.subject_id == pl.models.Subject.id).all()
-           print res
-           t1images.extend(res)
+        table = []
+        headers = ['subject', 't1image']
+        q = []
+        q.append(dict(p.session.query(pl.models.Subject.identifier, func.count(pl.models.T1Image.path)).filter(pl.models.T1Image.subject_id == pl.models.Subject.id).group_by(pl.models.Subject.identifier).all()))
+        for each in datatypes:
+            headers.append(each)
+            res = p.session.query(pl.models.Subject.identifier, func.count(pl.models.Processing.path)).join(pl.models.T1Image).filter(pl.models.Processing.input_id == pl.models.T1Image.id).filter(pl.models.T1Image.subject_id == pl.models.Subject.id).filter(pl.models.Processing.datatype==each).group_by(pl.models.Subject.identifier).all()
+            q.append(dict(res))
 
-        # list of processing datatypes
-        datatypes = p.session.query(distinct(pl.models.Processing.datatype)).all()
-        print datatypes
-        # for each datatype, recup le dict par sujet
-        datatypes = p.session.query(distinct(pl.models.Processing.datatype)).all()
-
-
-
+        subjects = [e[0] for e in p.session.query(pl.models.Subject.identifier).all()]
+        table.append(headers)
+        for s in subjects:
+            table.append([s])
+            table[-1].extend([each.get(s, 0) for each in q])
 
         #print t1images
-        args['images'] = t1images
+        args['images'] = table
 
         res = json.dumps(args)
         self.write(res)
